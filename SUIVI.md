@@ -1,5 +1,13 @@
 Planning 
 
+Amélioration:
+    Objectif bibliographique:
+        -Résumé Jolteon
+        -Preuve
+        -Décrire l'idée de l'amélioration
+    Implémentation:
+        -Implémenter l'amélioration 
+        
 Réparation:
     Objectif bibliographique:
         -Résumé Jolteon
@@ -9,12 +17,5 @@ Réparation:
         -Implémenter 2PAC
         -Vérification
 
-Amélioration:
-    Objectif bibliographique:
-        -Résumé Jolteon
-        -Preuve
-        -Décrire l'idée de l'amélioration
-    Implémentation:
-        -Implémenter l'amélioration 
 
 
