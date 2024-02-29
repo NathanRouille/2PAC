@@ -1,4 +1,4 @@
-Planning   
+Planning du groupe  Nathan Rouillé Aymane Hamdaoui Titouan Duhazé Adam Chgour Rayane Dakhlaoui  
 
 Amélioration:  
 &nbsp;Objectif bibliographique:  
@@ -18,7 +18,7 @@ Réparation:
 &nbsp;&nbsp;-Vérification                              ( 30 Mai)  
 
 Objectifs Bonus:                                     
-&nbsp;-Mesure des performances                       ( Juin )  
+&nbsp;-Mesure des performances                       (Tous le  Juin )  
 
 
 
