@@ -14,7 +14,8 @@
 >>Séance 13/03
 >(Nathan) Continue à résumer DiemBFT
 >(Adam) Début preuve Safety de Joelton
+>(Titouan) Continue a résumé Jolteon Design 
 
 >>Séance 20/03
 >(Nathan) Fini le résumé de DiemBFT. Préparation de questions pour M. Rambaud. Mise en commun avec le groupe sur le fonctionnement de DiemBFT.
->(Adam) suite de la preuve de Safety de Jolteon.
+>(Adam, Titouan) suite de la preuve de Safety de Jolteon.
