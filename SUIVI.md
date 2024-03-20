@@ -11,8 +11,10 @@
 >>Séance 29/02
 >(Titouan, Nathan, Rayane) Séance de question avec M. Rambaud afin de mieux omprendre la terminology de DiemBFT
 
->>Séance 13/02
+>>Séance 13/03
 >(Nathan) Continue à résumer DiemBFT
+>(Adam) Début preuve Safety de Joelton
 
 >>Séance 20/03
 >(Nathan) Fini le résumé de DiemBFT. Préparation de questions pour M. Rambaud. Mise en commun avec le groupe sur le fonctionnement de DiemBFT.
+>(Adam) suite de la preuve de Safety de Jolteon.
