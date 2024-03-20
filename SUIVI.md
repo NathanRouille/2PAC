@@ -13,3 +13,6 @@
 
 >>Séance 13/02
 >(Nathan) Continue à résumer DiemBFT
+
+>>Séance 20/03
+>(Nathan) Fini le résumé de DiemBFT. Préparation de questions pour M. Rambaud. Mise en commun avec le groupe sur le fonctionnement de DiemBFT.
