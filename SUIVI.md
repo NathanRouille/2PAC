@@ -25,3 +25,4 @@
   
 >>Séance 26/03  
 >(Nathan) Finalisation du résumé DiemBFT et Jolteon. Ajout de nouvelles questions à poser à M. Rambaud. Début d'apprentissage du langage Rust.
+>(Aymane) Suite preuve Jolteon [Lemme 6 Lemme 7 et Théorème 2]
