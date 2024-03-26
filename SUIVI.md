@@ -21,4 +21,7 @@
 >(Nathan) Fini le résumé de DiemBFT. Préparation de questions pour M. Rambaud. Mise en commun avec le groupe sur le fonctionnement de DiemBFT.  
 >(Adam, Titouan) suite de la preuve de Safety de Jolteon.  
 >(Rayane) Recherche bibliographique et étude approfondie sur la sécurité et l'efficacité de Jolteon et DiemBFT : Analyse comparative et implications sur la latence de validation des blocs  
->(Aymane) Début preuve Liveness de Jolteon [Lemme 4 et Lemme 5]
+>(Aymane) Début preuve Liveness de Jolteon [Lemme 4 et Lemme 5]  
+  
+>>Séance 26/03  
+>(Nathan) Finalisation du résumé DiemBFT et Jolteon. Ajout de nouvelles questions à poser à M. Rambaud. Début d'apprentissage du langage Rust.
