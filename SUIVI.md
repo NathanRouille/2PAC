@@ -15,8 +15,10 @@
 >(Nathan) Continue à résumer DiemBFT  
 >(Adam) Début preuve Safety de Joelton  
 >(Titouan) Continue a résumé Jolteon Design  
+>(Aymane) Lecture Jolteon Design 1à premières pages
 
 >>Séance 20/03  
 >(Nathan) Fini le résumé de DiemBFT. Préparation de questions pour M. Rambaud. Mise en commun avec le groupe sur le fonctionnement de DiemBFT.  
 >(Adam, Titouan) suite de la preuve de Safety de Jolteon.  
 >(Rayane) Recherche bibliographique et étude approfondie sur la sécurité et l'efficacité de Jolteon et DiemBFT : Analyse comparative et implications sur la latence de validation des blocs  
+>(Aymane) Début preuve Liveness de Jolteon [Lemme 4 et Lemme 5]
