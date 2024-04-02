@@ -29,3 +29,4 @@
   
 >>Séance 02/04  
 >(Nathan) Début apprentissage Rust. Téléchargement et prise en main de cargo. Lecture du "book", The Rust Programming Language jusqu'au chapitre 3.1  
+>(Aymane) Début du Rust. Premières utilisations de cargo et de rustfmt.
