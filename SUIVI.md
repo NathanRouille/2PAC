@@ -24,5 +24,8 @@
 >(Aymane) Début preuve Liveness de Jolteon [Lemme 4 et Lemme 5]  
   
 >>Séance 26/03  
->(Nathan) Finalisation du résumé DiemBFT et Jolteon. Ajout de nouvelles questions à poser à M. Rambaud. Début d'apprentissage du langage Rust.
->(Aymane) Suite preuve Jolteon [Lemme 6 Lemme 7 et Théorème 2]
+>(Nathan) Finalisation du résumé DiemBFT et Jolteon. Ajout de nouvelles questions à poser à M. Rambaud. Début d'apprentissage du langage Rust.  
+>(Aymane) Suite preuve Jolteon [Lemme 6 Lemme 7 et Théorème 2]  
+  
+>>Séance 02/04  
+>(Nathan) Début apprentissage Rust. Téléchargement et prise en main de cargo. Lecture du "book", The Rust Programming Language jusqu'au chapitre 3.1  
