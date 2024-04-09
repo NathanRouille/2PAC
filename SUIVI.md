@@ -33,3 +33,6 @@
 >(Aymane) Début du Rust. Premières utilisations de cargo et de rustfmt.
 >(Adam, Titouan) Début d'apprentissage du Rust.
 >(Rayane) Découverte du Rust.
+
+>>Séance 09/04
+>(Aymane) Réunion répartition des rôles prochaine période. Reprise du Rust. Vu d'ensemble de l'implémentation de Ditto.
