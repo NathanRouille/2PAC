@@ -39,3 +39,4 @@
 
 >>Séance 09/04
 >(Aymane) Réunion répartition des rôles prochaine période. Reprise du Rust. Vu d'ensemble de l'implémentation de Ditto.
+>(Nathan) Réunion répartition des rôles : je vais continuer sur la preuve de Jolteon. Relecture et mise au propre du compte rendu de la séance de questions avec M. Rambaud. Lecture du résumé de la preuve de Jolteon faites par mes camarades.
