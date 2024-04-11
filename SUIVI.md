@@ -34,5 +34,8 @@
 >(Adam, Titouan) Début d'apprentissage du Rust.
 >(Rayane) Découverte du Rust.
 
+>> Rdv M.Rambaud 05/04
+>(Nathan et Titouan) Session questions-réponses avec M. Rambaud
+
 >>Séance 09/04
 >(Aymane) Réunion répartition des rôles prochaine période. Reprise du Rust. Vu d'ensemble de l'implémentation de Ditto.
