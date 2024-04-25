@@ -39,10 +39,10 @@
 
 >>Séance 09/04  
 >(Aymane) Réunion répartition des rôles prochaine période. Reprise du Rust. Vu d'ensemble de l'implémentation de Ditto.  
->(Nathan) Réunion répartition des rôles : je vais continuer sur la preuve de Jolteon. Relecture et mise au propre du compte rendu de la séance de questions avec M. Rambaud. Lecture du résumé de la preuve de Jolteon faites par mes camarades. 
+>(Nathan) Réunion répartition des rôles : je vais continuer sur la preuve de Jolteon. Relecture et mise au propre du compte rendu de la séance de questions avec M. Rambaud. Lecture du résumé de la preuve de Jolteon faites par mes camarades.   
 >(Titouan) Recherche sur 2-phase-VABA et 2Pac 
 
 >>Séance 24/04  
 >(Aymane) Travail du Rust. Chapitre 4 et 5.  
->(Titouan)Resumé des documents sur 2-phase-VABA et 2Pac
+>(Titouan)Resumé des documents sur 2-phase-VABA et 2Pac  
 >(Nathan) Continue la preuve de Jolteon pour le rendu de mi-parcours  
