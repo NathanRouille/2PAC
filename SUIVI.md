@@ -46,3 +46,6 @@
 >(Aymane) Travail du Rust. Chapitre 4 et 5.  
 >(Titouan,Rayane)Resumé des documents sur 2-phase-VABA et 2Pac  
 >(Nathan) Continue la preuve de Jolteon pour le rendu de mi-parcours  
+
+>>Séance 02/05
+>(Nathan) Fin de la preuve de Jolteon + mise au propre en LaTeX pour le rendu intermédiaire.
