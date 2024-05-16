@@ -49,3 +49,6 @@
 
 >>Séance 02/05
 >(Nathan) Fin de la preuve de Jolteon + mise au propre en LaTeX pour le rendu intermédiaire.
+
+>>Séance 15/05
+>(Aymane) Travail du Rust. Chapitre 11 du book writing automated test.
