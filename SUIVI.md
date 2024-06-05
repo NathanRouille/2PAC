@@ -56,3 +56,4 @@
 >Séance 5/05
 
 >Mise en place d'un nouveau planning de fin de projet
+>(Adam) Travail sur l'implémentation d'Abraxas
