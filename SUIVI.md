@@ -52,3 +52,7 @@
 
 >>Séance 15/05
 >(Aymane) Travail du Rust. Chapitre 11 du book writing automated test.
+
+>Séance 5/05
+
+>Mise en place d'un nouveau planning de fin de projet
