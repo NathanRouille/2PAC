@@ -53,7 +53,8 @@
 >>Séance 15/05
 >(Aymane) Travail du Rust. Chapitre 11 du book writing automated test.
 
->Séance 5/05
-
->Mise en place d'un nouveau planning de fin de projet
->(Adam) Travail sur l'implémentation d'Abraxas
+>>Séance 5/05  
+>(Tout le groupe)Mise en place d'un nouveau planning de fin de projet  
+>(Adam) Travail sur l'implémentation d'Abraxas  
+>(Titouan) Travail sur l'imprélementation de 2-chain-VABA v2  
+>(Rayane) Travail sur l'amélioration de 2-chain-VABA en 2-PAC
