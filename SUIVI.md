@@ -65,3 +65,8 @@
 >>Séance 22/05
 >(Aymane) Travail sur implémentation existante
 
+>>Séance 29/05
+>(Aymane) Séance audit
+
+>>Séance 05/05
+>(Aymane) Retour séance d'audit + recherche git d'implémentation existante pour asynchrones
