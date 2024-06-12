@@ -58,3 +58,10 @@
 >(Adam) Travail sur l'implémentation d'Abraxas  
 >(Titouan) Travail sur l'imprélementation de 2-chain-VABA v2  
 >(Rayane) Travail sur l'amélioration de 2-chain-VABA en 2-PAC
+
+>>Séance 15/05
+>(Aymane) Début travail sur 2PAC avec implémentation abraxas.
+
+>>Séance 22/05
+>(Aymane) Travail sur implémentation existante
+
