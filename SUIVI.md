@@ -61,12 +61,15 @@
 
 >>Séance 15/05
 >(Aymane) Début travail sur 2PAC avec implémentation abraxas.
+>(Rayane) Travail sur l'amélioration de 2-chain-VABA en 2-PAC
 
 >>Séance 22/05
 >(Aymane) Travail sur implémentation existante
+>(Rayane) Suite travail sur l'amélioration de 2-chain-VABA en 2-PAC
 
 >>Séance 29/05
->(Aymane) Séance audit
+>(Groupe) Séance audit
 
->>Séance 05/05
+>>Séance 05/06
 >(Aymane) Retour séance d'audit + recherche git d'implémentation existante pour asynchrones
+>(Rayane) Retour séance d'audit + Suite travail sur l'amélioration de 2-chain-VABA en 2-PAC
