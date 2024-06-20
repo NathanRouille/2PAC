@@ -76,4 +76,7 @@
 >(Aymane) Retour séance d'audit + recherche git d'implémentation existante pour asynchrones
 >(Rayane) Retour séance d'audit + Suite travail sur l'amélioration de 2-chain-VABA en 2-PAC
 >(Adam) Retour séace audit + Suite travail sur l'amélioration de 2-chain-VABA en 2-PAC  
->(Nathan) Continue à lire le papier de 2PAC et à le résumer
+>(Nathan) Continue à lire le papier de 2PAC et à le résumer  
+
+>>Séance 12/06  
+>(Nathan) Réunion avec M. Rambaud. Echange avec les autres groupes et révision des objectifs  
