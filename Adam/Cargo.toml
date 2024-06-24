@@ -1,0 +1,19 @@
+[package]
+name = "Adam"
+version = "0.1.0"
+authors = ["Adam adam.chgour@telecom-paris.fr"]
+edition = "2021"
+
+[dependencies]
+sha2 = "0.10.8"
+serde = { version = "1.0.130", features = ["derive"] }
+serde_json = "1.0.64"
+rand = "0.8.4"
+hex = "0.4.3"
+
+[dev-dependencies]
+sha2 = "0.10.8"
+serde = { version = "1.0.130", features = ["derive"] }
+serde_json = "1.0.64"
+rand = "0.8.4"
+hex = "0.4.3"
