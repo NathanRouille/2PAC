@@ -47,8 +47,36 @@
 >(Titouan,Rayane)Resumé des documents sur 2-phase-VABA et 2Pac  
 >(Nathan) Continue la preuve de Jolteon pour le rendu de mi-parcours  
 
->>Séance 02/05
+>>Séance 02/05  
 >(Nathan) Fin de la preuve de Jolteon + mise au propre en LaTeX pour le rendu intermédiaire.
 
->>Séance 15/05
->(Aymane) Travail du Rust. Chapitre 11 du book writing automated test.
+>>Séance 07/05  
+>(Tout le groupe)Mise en place d'un nouveau planning de fin de projet  
+>(Adam) Travail sur l'implémentation d'Abraxas  
+>(Titouan) Travail sur l'imprélementation de 2-chain-VABA v2  
+>(Rayane) Travail sur l'amélioration de 2-chain-VABA en 2-PAC  
+>(Nathan) Apprendre le Rust, chapitres 3 à 6
+
+>>Séance 15/05  
+>(Aymane) Début travail sur 2PAC avec implémentation abraxas.
+>(Rayane) Travail sur l'amélioration de 2-chain-VABA en 2-PAC
+>(Adam) Travail sur la documentation d'Abraxas  
+>(Nathan) Apprendre le Rust, chapitres 1 à 3
+
+>>Séance 22/05  
+>(Aymane) Travail sur implémentation existante
+>(Rayane) Suite travail sur l'amélioration de 2-chain-VABA en 2-PAC
+>(Adam) Travail sur l'implémentation existante  
+>(Nathan) Lecture du papier de 2PAC et résumé
+
+>>Séance 29/05  
+>(Groupe) Séance audit
+
+>>Séance 05/06  
+>(Aymane) Retour séance d'audit + recherche git d'implémentation existante pour asynchrones
+>(Rayane) Retour séance d'audit + Suite travail sur l'amélioration de 2-chain-VABA en 2-PAC
+>(Adam) Retour séace audit + Suite travail sur l'amélioration de 2-chain-VABA en 2-PAC  
+>(Nathan) Continue à lire le papier de 2PAC et à le résumer  
+
+>>Séance 12/06  
+>(Nathan) Réunion avec M. Rambaud. Echange avec les autres groupes et révision des objectifs  
