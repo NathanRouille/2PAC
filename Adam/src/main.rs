@@ -28,9 +28,14 @@ fn decode<T: DeserializeOwned>(s: Vec<u8>) -> Result<T, serde_json::Error> {
 
 
 // Structure de bloc
+use std::collections::HashMap;
 #[derive(Serialize, Deserialize)]
 struct Block {
-    // ...
+    sender: String,
+    round: u64,
+    previous_hash: HashMap<String, Vec<u8>>,
+    txs: Vec<Vec<u8>>,
+    timestamp: i64,
 }
 
 impl Block {
@@ -76,19 +81,32 @@ mod tests {
 
     #[test]
     fn test_block_get_hash() {
-        let block = Block { /* ... */ };
+        let block = Block {
+            sender: String::from("sender"),
+            round: 1,
+            previous_hash: HashMap::new(),
+            txs: vec![vec![1, 2, 3]],
+            timestamp: 1234567890,
+        };
         let hash = block.get_hash().unwrap();
-        let expected_hash = hex::decode("...").unwrap();
+        let expected_hash = hex::decode("44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a").unwrap();
         assert_eq!(hash, expected_hash);
     }
-
+    
     #[test]
     fn test_block_get_hash_as_string() {
-        let block = Block { /* ... */ };
+        let block = Block {
+            sender: String::from("sender"),
+            round: 1,
+            previous_hash: HashMap::new(),
+            txs: vec![vec![1, 2, 3]],
+            timestamp: 1234567890,
+        };
         let hash_str = block.get_hash_as_string().unwrap();
-        let expected_hash_str = "...";
+        let expected_hash_str = "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a";
         assert_eq!(hash_str, expected_hash_str);
     }
+    
 
     #[test]
     fn test_generate_tx() {
