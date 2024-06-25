@@ -105,4 +105,9 @@ class Node:
             self.elect[elect.Round] = {}
         self.elect[elect.Round][elect.Sender] = elect.PartialSig
 
+    def storePendingBlocks(self, block: Block):
+        if block.Round not in self.pendingBlocks:
+            self.pendingBlocks[block.Round] = {}
+        self.pendingBlocks[block.Round][block.Sender] = block
+
     
