@@ -80,4 +80,34 @@ class Node:
         self.logger.info("the average", latency=latency, throughput=throughPut)
         self.logger.info("the total commit", block_number=blockNum, time=pastTime)
 
+    def InitCBC(self, conf: Config):
+        self.cbc = CBCer(self.name, conf.clusterAddrWithPorts, self.trans, self.quorumNum, self.nodeNum, self.privateKey, self.tsPublicKey, self.tsPrivateKey)
+
+    def selectPreviousBlocks(self, round):
+        with self.lock:
+            previousHash = {}
+            if round == 0:
+                return None
+            for sender, block in self.dag.get(round, {}).items():
+                hash = block.get_hash()
+                previousHash[sender] = hash
+        return previousHash
+
+    def storeDone(self, done: Done):
+        if done.Round not in self.done:
+            self.done[done.Round] = {}
+        if done.BlockSender not in self.done[done.Round]:
+            self.done[done.Round][done.BlockSender] = done
+            self.moveRound[done.Round] = self.moveRound.get(done.Round, 0) + 1
+
+    def storeElectMsg(self, elect: Elect):
+        if elect.Round not in self.elect:
+            self.elect[elect.Round] = {}
+        self.elect[elect.Round][elect.Sender] = elect.PartialSig
+
+    def storePendingBlocks(self, block: Block):
+        if block.Round not in self.pendingBlocks:
+            self.pendingBlocks[block.Round] = {}
+        self.pendingBlocks[block.Round][block.Sender] = block
+
     
