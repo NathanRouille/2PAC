@@ -13,13 +13,13 @@ class Config:
         self.other_param1 = other_param1
         self.clusterAddrWithPorts = cluster_addr_with_ports
         self.other_param2 = other_param2
-        self.pub_key_map = pub_key_map
-        self.priv_key = priv_key
+        self.publicKeyMap = pub_key_map
+        self.privateKey = priv_key
         self.pub_poly = pub_poly
         self.share = share
         #self.log_level = log_level                 #Je l'enleve dans Node
         self.IsFaulty = some_flag
-        self.batch_size = batch_size
+        self.batchSize = batch_size
         self.round = round
 
     def __repr__(self):
