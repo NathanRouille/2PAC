@@ -1,7 +1,12 @@
+##############         IMPORTS         ##############
+#####################################################
+# Importer les bibliothèques nécessaires
+
 import asyncio
 from asyncio import Queue
 from threading import Lock
-
+##############         CLASSES         ##############
+#####################################################
 class Node:
     def __init__(self, trans, cbc, logger, name):
         self.trans = trans
