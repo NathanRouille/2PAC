@@ -1,4 +1,3 @@
-from flask import Flask, request
 import sign
 import pickle
 import data_struct
