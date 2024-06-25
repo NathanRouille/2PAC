@@ -1,6 +1,4 @@
 from flask import Flask, request
-import ed25519
-import share
 import sign
 import pickle
 import data_struct
