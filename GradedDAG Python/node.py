@@ -125,4 +125,19 @@ class Node:
             else:
                 self.storePendingBlocks(block)
 
+    def tryToUpdateDAGFromPending(self, round):
+        with self.lock:
+            if round not in self.pendingBlocks:
+                return
+            for sender, block in self.pendingBlocks[round].items():
+                del self.pendingBlocks[round][sender]
+                self.tryToUpdateDAG(block)
+
+    def checkWhetherCanAddToDAG(self, block: Block):
+        linkHash = block.PreviousHash
+        for sender in linkHash:
+            if sender not in self.dag.get(block.Round - 1, {}):
+                return False
+        return True
+
     
