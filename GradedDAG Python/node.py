@@ -80,4 +80,7 @@ class Node:
         self.logger.info("the average", latency=latency, throughput=throughPut)
         self.logger.info("the total commit", block_number=blockNum, time=pastTime)
 
+    def InitCBC(self, conf: Config):
+        self.cbc = CBCer(self.name, conf.clusterAddrWithPorts, self.trans, self.quorumNum, self.nodeNum, self.privateKey, self.tsPublicKey, self.tsPrivateKey)
+
     
