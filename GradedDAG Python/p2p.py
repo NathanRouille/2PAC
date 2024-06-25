@@ -4,12 +4,32 @@
 import socket
 import threading
 import time
+import json
 
 ##from machin import Node 
 from node import *
 from main import *
 ##############         CLASSES         ##############
 #####################################################
+
+class Block:
+    def __init__(self,index,data):
+        self.index = index
+        self.data = data
+
+    def to_json(self):
+        return json.dumps({
+            'index': self.index,
+            'data': self.data,
+        })
+
+    @classmethod
+    def from_json(cls, json_str):
+        data = json.loads(json_str)
+        return cls(data['index'], data['data'])
+
+    def __repr__(self):
+        return f"Block(index={self.index}, data={self.data})"
 
 class Com:
     def __init__(self,node: Node , host = None, port = None, peers = None):
@@ -88,6 +108,11 @@ class Com:
         for peer in self.peers:
             self.send_message(message, peer)
 
+    def broadcast_block(self, block):  
+        message = block.to_json()
+        for peer in self.peers:
+            self.send_message(message, peer)
+
     def stop(self):
         #print("Stopping node...")
         for thread in self.threads:
@@ -119,6 +144,8 @@ def wait_and_send():
 
 wait_and_send() """
 
+block = Block(0, "Hello, world!")
+
 if __name__ == "__main__":
     log_level = 1
     batch_size = 10
@@ -132,7 +159,7 @@ if __name__ == "__main__":
     com_1.start()
     com_2.start()
     com_3.start()
-    com_0.broadcast_message("Hello, world!")
+    com_0.broadcast_block(block)
     print(com_0)
 
         
