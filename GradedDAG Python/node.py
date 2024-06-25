@@ -9,10 +9,7 @@ import time
 from config import Config
 from conn import NetworkTransport
 from sign import *
-from block import Block, encode  # Assumed imports
-from chain import Chain
-from done import Done
-from elect import Elect
+from data_struct import Block, Chain,Done,Elect, encode  # Assumed imports
 from cbc import CBCer
 
 ##############         CLASSES         ##############
