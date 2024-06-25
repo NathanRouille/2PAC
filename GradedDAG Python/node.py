@@ -110,4 +110,19 @@ class Node:
             self.pendingBlocks[block.Round] = {}
         self.pendingBlocks[block.Round][block.Sender] = block
 
+    def tryToUpdateDAG(self, block: Block):
+        with self.lock:
+            if self.checkWhetherCanAddToDAG(block):
+                if block.Round not in self.dag:
+                    self.dag[block.Round] = {}
+                self.dag[block.Round][block.Sender] = block
+                if block.Round % 2 == 0:
+                    self.moveRound[block.Round] = self.moveRound.get(block.Round, 0) + 1
+                    self.tryToNextRound(block.Round)
+                else:
+                    self.tryToCommitLeader(block.Round)
+                self.tryToUpdateDAGFromPending(block.Round + 1)
+            else:
+                self.storePendingBlocks(block)
+
     
