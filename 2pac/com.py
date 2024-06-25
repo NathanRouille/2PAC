@@ -77,7 +77,21 @@ class Com:
         except ConnectionRefusedError:
             print(f"Unable to send message to peer {peer}")
 
-    def broadcast(self, message):
+    def broadcast_message(self, message):
+        try:
+            message = message.to_json()
+        except:
+            message = json.dumps({'message': message})
+        for peer in self.peers:
+            self.send_message(message, peer)
+
+    def broadcast_block(self, block):  
+        message = block.to_json()
+        for peer in self.peers:
+            self.send_message(message, peer)
+        
+    def broadcast_vote(self, vote):
+        message = vote.to_json()
         for peer in self.peers:
             self.send_message(message, peer)
 

@@ -19,12 +19,7 @@ def start_com(node):
     return com
 
 def broadcast(com, message):
-    if isinstance(message, Vote):
-        com.broadcast_vote(message)
-    elif isinstance(message, Block):
-        com.broadcast_block(message)
-    else:
-        com.broadcast(message)
+    com.broadcast_message(message)
     
 
     
