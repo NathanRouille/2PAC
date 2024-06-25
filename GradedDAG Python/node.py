@@ -153,4 +153,15 @@ class Node:
             self.leader[round - 1] = leader_name
             self.tryToCommitLeader(round - 1)
 
+    def tryToNextRound(self, round):
+        with self.lock:
+            if round != self.round:
+                return
+            count = self.moveRound.get(round, 0)
+            if count >= self.quorumNum:
+                self.round += 1
+                self.nextRound_round = round + 1
+                self.nextRound.set()
+                self.tryToNextRound(round + 1)
+
     
