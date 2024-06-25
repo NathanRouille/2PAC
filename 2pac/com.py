@@ -10,10 +10,8 @@ class Com:
     def __init__(self,node: Node , host = None, port = None, peers = None):
         #print("Node class initialized")
         self.host = 'localhost'
-        for val in node.clusterPort:
-            if val == node.name:
-                self.port = node.clusterPort[val]
-        self.peers = [('localhost', x ) for x in node.clusterPort.values() if x != self.port]
+        self.port = node.port
+        self.peers = node.peers
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.threads = []
@@ -98,3 +96,9 @@ class Com:
         for thread in self.threads:
             thread.join()
         self.sock.close()
+
+
+def start_com(node):
+    com = Com(node)
+    com.start()
+    return com
