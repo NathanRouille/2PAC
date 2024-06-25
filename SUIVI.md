@@ -79,4 +79,10 @@
 >(Nathan) Continue à lire le papier de 2PAC et à le résumer  
 
 >>Séance 12/06  
->(Nathan) Réunion avec M. Rambaud. Echange avec les autres groupes et révision des objectifs  
+>(Natha,Rayane) Réunion avec M. Rambaud. Echange avec les autres groupes et révision des objectifs  
+
+>>Séance 24/06
+
+>>Séance 25/06
+
+>>Séance 26/06
