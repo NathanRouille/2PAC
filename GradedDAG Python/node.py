@@ -247,4 +247,17 @@ class Node:
         timestamp = time.time_ns()
         return Block(self.name, round, previousHash, batch, timestamp)
 
-    
+    def verifySigED25519(self, peer, data, sig):
+        pubKey = self.publicKeyMap.get(peer)
+        if not pubKey:
+            self.logger.error("node is unknown", node=peer)
+            return False
+        dataAsBytes = encode(data)
+        valid, err = VerifySignEd25519(pubKey, dataAsBytes, sig)
+        if err:
+            self.logger.error("fail to verify the ED25519 signature", error=err)
+            return False
+        return valid
+
+    def IsFaultyNode(self):
+        return self.isFaulty
