@@ -32,12 +32,14 @@ cluster_addr = {
 }
 
 # Define cluster ports
+ports = [random.randint(1000, 9000) for i in range(4)]
 cluster_port = {
-    "node0": 8000,
-    "node1": 8010,
-    "node2": 8020,
-    "node3": 8030,
+    "node0": ports[0],
+    "node1": ports[1],
+    "node2": ports[2],
+    "node3": ports[3],
 }
+
 
 
 #############         FUNCTIONS         #############
