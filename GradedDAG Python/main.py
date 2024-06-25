@@ -72,7 +72,7 @@ def setup_nodes( batch_size, round):
         nodes[i] = Node(confs[i])
         if not nodes[i].network.start_p2p_listen():
             raise Exception("Failed to start P2P listener")
-        nodes[i].init_cbc(confs[i])
+        nodes[i].InitCBC(confs[i])
 
     for i in range(4):
         nodes[i].establish_p2p_conns()
