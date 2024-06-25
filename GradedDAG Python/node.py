@@ -100,4 +100,9 @@ class Node:
             self.done[done.Round][done.BlockSender] = done
             self.moveRound[done.Round] = self.moveRound.get(done.Round, 0) + 1
 
+    def storeElectMsg(self, elect: Elect):
+        if elect.Round not in self.elect:
+            self.elect[elect.Round] = {}
+        self.elect[elect.Round][elect.Sender] = elect.PartialSig
+
     
