@@ -78,3 +78,23 @@ class CBC:
             done = Done(self.name, ready.block_sender, partial_sig, ready.hash, ready.round)
             self.done_ch.put(done)
             self.done_output[(ready.round, ready.block_sender)] = True
+
+    def try_to_output_blocks(self, round, sender):
+        if (round, sender) in self.block_output:
+            return
+        if sender not in self.pending_blocks[round]:
+            return
+        block = self.pending_blocks[round][sender]
+        self.block_output[(round, sender)] = True
+        if block.round % 2 == 1 and not self.block_send[block.round + 1]:
+            hash, _ = block.get_hash()
+            self.broadcast_ready(block.round, hash, block.sender)
+        self.block_ch.put(block)
+
+    def broadcast(self, msg_type, msg):
+        data = pickle.dumps(msg)
+        sig = sign.sign_ed25519(self.private_key, data)
+        for addr_with_port in self.cluster_addr_with_ports:
+            net_conn = self.conn_pool.get_conn(addr_with_port)
+            conn.send_msg(net_conn, msg_type, msg, sig)
+            self.conn_pool.return_conn(net_conn)
