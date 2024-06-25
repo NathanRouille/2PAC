@@ -1,7 +1,13 @@
+##############         IMPORTS         ##############
+#####################################################
+
 import socket
 import threading
 import time
 ##from machin import Node 
+
+##############         CLASSES         ##############
+#####################################################
 
 class Node:
     def __init__(self, host, port, peers):
