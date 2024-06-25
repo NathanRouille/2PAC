@@ -8,6 +8,7 @@ import gmpy2
 import random
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.backends import default_backend
+import time
 
 #Importer d'autres fichier
 
@@ -80,7 +81,25 @@ def gen_ts_keys(t, n):
 
 ##############         EXEMPLES         #############
 #####################################################
+# Example 1
+# Exemple d'utilisation de la classe Sign
+def exemple1():
+   
+    # Generate key pair
+    private_key, public_key = Sign.generate_keypair()
+    print(f"Public Key: {public_key.encode(encoder=encoding.HexEncoder).decode('utf-8')}")
 
+    # Sign a message
+    message = "Hello, World!"
+    signed_message = Sign.sign_message(private_key, message)
+    print(f"Signed Message: {signed_message}")
+
+    # Verify the signature
+    is_valid = Sign.verify_signature(public_key, signed_message)
+    print(f"Signature valid: {is_valid}")
+
+    # Simulate some delay
+    time.sleep(1)
 
 ################         MAIN         ###############
 #####################################################
