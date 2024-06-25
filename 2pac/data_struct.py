@@ -51,7 +51,7 @@ class Vote:
 
     def to_json(self):
         return json.dumps({
-            'sender': self.sender
+            'sender': self.vote_sender
         })
 
 
@@ -62,7 +62,7 @@ class Vote1(Vote):
 
     def to_json(self):
         return json.dumps({
-            'sender': self.sender,
+            'sender': self.vote_sender,
             'Block_sender': self.block_sender
         })
 
@@ -73,6 +73,6 @@ class Vote2(Vote):
 
     def to_json(self):
         return json.dumps({
-            'sender': self.sender,
+            'sender': self.vote_sender,
             'qc_sender': self.qc_sender
         })

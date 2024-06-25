@@ -13,7 +13,7 @@ ports = {
 
 block = Block1(0, "block")
 
-vote = Vote(1)
+vote1 = Vote1(0,1)
 
 def setup_nodes():
     node0 = Node(0,'localhost', ports["node0"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node3"])], 0, None, None)
@@ -34,5 +34,5 @@ if __name__ == "__main__":
     Nodes = setup_nodes()
     coms = start_coms(Nodes)
     print("Nodes and coms setup")
-    broadcast(coms[0], block)
+    broadcast(coms[0], vote1)
                                                                                         
