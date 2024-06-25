@@ -29,7 +29,6 @@ class Sign:
 def handlemessage(message):
     pass
 
-
 def start_com(node):
     com = Com(node)
     com.start()
@@ -39,14 +38,20 @@ def broadcast(com, message):
     com.broadcast_message(message)
 
 def exemple1():
-   
     # Generate key pair
     private_key, public_key = Sign.generate_keypair()
     print(f"Public Key: {public_key.encode(encoder=encoding.HexEncoder).decode('utf-8')}")
 
-    # Sign a message
-    message = "Hello, World!"
-    signed_message = Sign.sign_message(private_key, message)
+    # Create a JSON message
+    message = {
+        "greeting": "Hello, World!",
+        "timestamp": time.time()
+    }
+    json_message = json.dumps(message)
+    print(f"JSON Message: {json_message}")
+
+    # Sign the JSON message
+    signed_message = Sign.sign_message(private_key, json_message)
     print(f"Signed Message: {signed_message}")
 
     # Verify the signature
@@ -56,6 +61,7 @@ def exemple1():
     # Simulate some delay
     time.sleep(1)
     
+
 
     
 def to_json(obj,node):
