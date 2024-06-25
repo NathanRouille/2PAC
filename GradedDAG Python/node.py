@@ -21,13 +21,13 @@ class Node:
         self.lock = threading.RLock()
         self.dag = {}
         self.pendingBlocks = {}
-        self.chain = Chain()
+        self.chain = Chain(1)  #round =1
         self.leader = {}
         self.done = {}
         self.elect = {}
         self.round = 1
         self.moveRound = {}
-        self.logger = conf.logger
+        #self.logger = conf.logger
 
         self.nodeNum = len(conf.clusterAddr)
         self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)

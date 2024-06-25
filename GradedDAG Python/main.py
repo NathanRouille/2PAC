@@ -112,6 +112,6 @@ if __name__ == "__main__":
     log_level = 1
     batch_size = 10
     round = 1
-    nodes = setup_nodes(log_level, batch_size, round)
+    nodes = setup_nodes( batch_size, round)
     for node in nodes:
         print(f"Node Name: {node.name}, Address: {node.address}, Port: {node.port}")

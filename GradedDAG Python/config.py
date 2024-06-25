@@ -8,10 +8,10 @@ class Config:
     def __init__(self, name, num_nodes, cluster_addr, cluster_port, other_param1, cluster_addr_with_ports, other_param2, pub_key_map, priv_key, pub_poly, share, some_flag, batch_size, round):
         self.name = name
         self.num_nodes = num_nodes
-        self.cluster_addr = cluster_addr
-        self.cluster_port = cluster_port
+        self.clusterAddr = cluster_addr
+        self.clusterPort = cluster_port
         self.other_param1 = other_param1
-        self.cluster_addr_with_ports = cluster_addr_with_ports
+        self.clusterAddrWithPorts = cluster_addr_with_ports
         self.other_param2 = other_param2
         self.pub_key_map = pub_key_map
         self.priv_key = priv_key
