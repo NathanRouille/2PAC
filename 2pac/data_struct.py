@@ -1,5 +1,5 @@
 class Node:
-    def __init__(self, id : int, host : str, port : int, peers : tuple,leader : int, publickey, privatekey):
+    def __init__(self, id : int, host : str, port : int, peers : list,leader : int, publickey, privatekey):
         self.id = id
         self.host = host
         self.port = port
