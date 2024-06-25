@@ -133,4 +133,11 @@ class Node:
                 del self.pendingBlocks[round][sender]
                 self.tryToUpdateDAG(block)
 
+    def checkWhetherCanAddToDAG(self, block: Block):
+        linkHash = block.PreviousHash
+        for sender in linkHash:
+            if sender not in self.dag.get(block.Round - 1, {}):
+                return False
+        return True
+
     
