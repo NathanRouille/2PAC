@@ -97,8 +97,3 @@ class Com:
             thread.join()
         self.sock.close()
 
-
-def start_com(node):
-    com = Com(node)
-    com.start()
-    return com
