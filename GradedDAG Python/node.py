@@ -197,4 +197,26 @@ class Node:
                 self.evaluation.append(latency)
                 self.commitAncestorBlocks(i)
 
+    def findValidLeader(self, round):
+        templeBlocks = {}
+        block = self.dag[round][self.leader[round]]
+        hash = block.get_hash_as_string()
+        templeBlocks[round] = {hash: block}
+        validLeader = {}
+
+        r = round
+        while r > 0:
+            templeBlocks[r - 1] = {}
+            for b in templeBlocks[r].values():
+                if b.Round % 2 == 1 and b.Sender == self.leader[b.Round]:
+                    validLeader[b.Round] = b.Sender
+                for sender in b.PreviousHash:
+                    linkBlock = self.dag[r - 1][sender]
+                    hash = linkBlock.get_hash_as_string()
+                    templeBlocks[r - 1][hash] = linkBlock
+            r -= 1
+            if r == 0 or r == self.chain.round:
+                break
+        return validLeader
+
     
