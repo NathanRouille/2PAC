@@ -5,6 +5,8 @@ import json
 from com import Com
 from data_struct import *
 from nacl import signing, encoding
+import base64
+
 
 class Sign:
     @staticmethod
@@ -65,6 +67,7 @@ def exemple1():
 
     
 def to_json(obj,node):
+    base64_representation = base64.b64encode(node.publickey.encode()).decode('utf-8')
     if isinstance(obj, Block1):
         data = {
             'sender': obj.vote_sender,
@@ -75,7 +78,7 @@ def to_json(obj,node):
             'type': 'Block1',
             'data': data,
             'signature': signed,
-            'public_key': node.publickey
+            'public_key': base64_representation
         })
     elif isinstance(obj, Block2):
         data = {
@@ -88,7 +91,7 @@ def to_json(obj,node):
             'type': 'Block2',
             'data': data,
             'signature': signed,
-            'public_key': node.publickey
+            'public_key': base64_representation
         })
     elif isinstance(obj, Vote1):
         data = {
@@ -99,8 +102,8 @@ def to_json(obj,node):
         return json.dumps({
             'type': 'Vote1',
             'data': data,
-            'signature': signed,
-            'public_key': node.publickey
+            #'signature': signed,
+            'public_key': base64_representation
         })
     elif isinstance(obj, Vote2):
         data = {
@@ -112,7 +115,8 @@ def to_json(obj,node):
             'type': 'Vote2',
             'data': data,
             'signature': signed,
-            'public_key': node.publickey
+            'public_key': base64_representation
         })
     else :
         return json.dumps(obj.__dict__)
+    

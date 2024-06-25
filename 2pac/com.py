@@ -4,6 +4,8 @@ import threading
 import time
 import json
 from data_struct import Node
+import base64
+
 
 
 class Com:
@@ -60,6 +62,9 @@ class Com:
                 if not data:
                     break
                 message = data.decode('utf-8')
+                print(type(json.loads(message)['data']))
+                #print(f"Pub: {find_publickey(message)}")
+
                 self.show_message(message)
             except Exception as e:
                 print(f"Error handling client: {e}")
@@ -87,3 +92,5 @@ class Com:
             thread.join()
         self.sock.close()
 
+def find_publickey(message):
+    return base64.b64decode(json.loads(message)["public_key"])
