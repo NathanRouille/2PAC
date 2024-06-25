@@ -4,6 +4,7 @@
 import math
 import threading
 import time
+from typing import Dict, Type, Optional
 
 #Importer d'autres fichier
 from config import Config
@@ -38,7 +39,7 @@ class Node:
         self.IsFaulty = conf.IsFaulty
 
         self.MaxPool = conf.MaxPool
-        self.trans = NetworkTransport()
+        self.trans: Optional[NetworkTransport] = None
         self.batchSize = conf.batchSize
         self.roundNumber = conf.round
 
@@ -47,10 +48,10 @@ class Node:
         self.privateKey = conf.privateKey
 
         # Used for threshold signature
-        self.tsPublicKey = conf.tsPublicKey
-        self.tsPrivateKey = conf.tsPrivateKey
+        self.tsPublicKey = conf.pub_poly
+        self.tsPrivateKey = conf.share
 
-        self.reflectedTypesMap = conf.reflectedTypesMap
+        self.reflected_types_map: Dict[int, Type] = {}
 
         self.nextRound = threading.Event()
         self.leaderElect = {}
