@@ -56,3 +56,28 @@ class Node:
         self.cbc = None
 
 
+    def RunLoop(self):
+        currentRound = 1
+        start = time.time_ns()
+        while currentRound <= self.roundNumber:
+            self.broadcastBlock(currentRound)
+            if currentRound % 2 == 0:
+                self.broadcastElect(currentRound)
+            self.nextRound.wait()
+            currentRound = self.nextRound_round
+
+        # wait all blocks are committed
+        time.sleep(5)
+
+        with self.lock:
+            end = self.commitTime[-1]
+            pastTime = (end - start) / 1e9
+            blockNum = len(self.evaluation)
+            throughPut = (blockNum * self.batchSize) / pastTime
+            totalTime = sum(self.evaluation)
+            latency = (totalTime / 1e9) / blockNum
+
+        self.logger.info("the average", latency=latency, throughput=throughPut)
+        self.logger.info("the total commit", block_number=blockNum, time=pastTime)
+
+    
