@@ -34,5 +34,5 @@ if __name__ == "__main__":
     Nodes = setup_nodes()
     coms = start_coms(Nodes)
     print("Nodes and coms setup")
-    broadcast(coms[0], vote1)
+    broadcast(coms[0], to_json(vote1, Nodes[0]))
                                                                                         

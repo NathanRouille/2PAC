@@ -58,3 +58,55 @@ def exemple1():
     
 
     
+def to_json(obj,node):
+    if isinstance(obj, Block1):
+        data = {
+            'sender': obj.vote_sender,
+            'Block_sender': obj.block_sender
+        }
+        signed = Sign.sign_message(node.privatekey, json.dumps(data))
+        return json.dumps({
+            'type': 'Block1',
+            'data': data,
+            'signature': signed,
+            'public_key': node.publickey
+        })
+    elif isinstance(obj, Block2):
+        data = {
+            'sender': obj.vote_sender,
+            'Block_sender': obj.block_sender,
+            'QC_sender': obj.qc_sender
+        }
+        signed = Sign.sign_message(node.privatekey, json.dumps(data))
+        return json.dumps({
+            'type': 'Block2',
+            'data': data,
+            'signature': signed,
+            'public_key': node.publickey
+        })
+    elif isinstance(obj, Vote1):
+        data = {
+            'sender': obj.vote_sender,
+            'Block_sender': obj.block_sender
+        }
+        signed = Sign.sign_message(node.privatekey, json.dumps(data))
+        return json.dumps({
+            'type': 'Vote1',
+            'data': data,
+            'signature': signed,
+            'public_key': node.publickey
+        })
+    elif isinstance(obj, Vote2):
+        data = {
+            'sender': obj.vote_sender,
+            'QC_sender': obj.qc_sender
+        }
+        signed = Sign.sign_message(node.privatekey, json.dumps(data))
+        return json.dumps({
+            'type': 'Vote2',
+            'data': data,
+            'signature': signed,
+            'public_key': node.publickey
+        })
+    else :
+        return json.dumps(obj.__dict__)

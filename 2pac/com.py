@@ -78,10 +78,6 @@ class Com:
             print(f"Unable to send message to peer {peer}")
 
     def broadcast_message(self, message):
-        try:
-            message = message.to_json()
-        except:
-            message = json.dumps({'message': message})
         for peer in self.peers:
             self.send_message(message, peer)
 
