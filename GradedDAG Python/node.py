@@ -83,4 +83,14 @@ class Node:
     def InitCBC(self, conf: Config):
         self.cbc = CBCer(self.name, conf.clusterAddrWithPorts, self.trans, self.quorumNum, self.nodeNum, self.privateKey, self.tsPublicKey, self.tsPrivateKey)
 
+    def selectPreviousBlocks(self, round):
+        with self.lock:
+            previousHash = {}
+            if round == 0:
+                return None
+            for sender, block in self.dag.get(round, {}).items():
+                hash = block.get_hash()
+                previousHash[sender] = hash
+        return previousHash
+
     
