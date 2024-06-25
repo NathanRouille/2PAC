@@ -85,16 +85,6 @@ class Com:
         for peer in self.peers:
             self.send_message(message, peer)
 
-    def broadcast_block(self, block):  
-        message = block.to_json()
-        for peer in self.peers:
-            self.send_message(message, peer)
-        
-    def broadcast_vote(self, vote):
-        message = vote.to_json()
-        for peer in self.peers:
-            self.send_message(message, peer)
-
     def stop(self):
         #print("Stopping node...")
         for thread in self.threads:
