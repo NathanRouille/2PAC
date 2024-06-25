@@ -76,33 +76,5 @@ class Node:
             done = await data_ch.get()
             asyncio.create_task(self.handle_done_msg(done))
             # make sure every node can get 2f+1 done
-            # asyncio.create_task(self.broadcast_done(done))
-
-# Example classes for Block, Elect, Ready, Done, and Vote
-class Block:
-    def __init__(self, sender, round):
-        self.sender = sender
-        self.round = round
-
-class Elect:
-    def __init__(self, sender, round):
-        self.sender = sender
-        self.round = round
-
-class Ready:
-    def __init__(self, ready_sender, block_sender, round):
-        self.ready_sender = ready_sender
-        self.block_sender = block_sender
-        self.round = round
-
-class Done:
-    def __init__(self, done_sender, block_sender, round):
-        self.done_sender = done_sender
-        self.block_sender = block_sender
-        self.round = round
-
-class Vote:
-    def __init__(self, vote_sender, block_sender, round):
-        self.vote_sender = vote_sender
-        self.block_sender = block_sender
-        self.round = round
+            await asyncio.sleep(1)
+            
