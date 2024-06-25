@@ -140,4 +140,17 @@ class Node:
                 return False
         return True
 
+    def tryToElectLeader(self, round):
+        elect = self.elect.get(round, {})
+        if len(elect) >= self.quorumNum and not self.leaderElect.get(round, False):
+            self.leaderElect[round] = True
+            partialSig = [sig for sig in elect.values()]
+            data = encode(round)
+            qc = AssembleIntactTSPartial(partialSig, self.tsPublicKey, data, self.quorumNum, self.nodeNum)
+            qcAsInt = int.from_bytes(qc, byteorder='big')
+            leader_id = qcAsInt % self.nodeNum
+            leader_name = f"node{leader_id}"
+            self.leader[round - 1] = leader_name
+            self.tryToCommitLeader(round - 1)
+
     
