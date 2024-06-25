@@ -140,4 +140,45 @@ class Node:
                 return False
         return True
 
+    def tryToElectLeader(self, round):
+        elect = self.elect.get(round, {})
+        if len(elect) >= self.quorumNum and not self.leaderElect.get(round, False):
+            self.leaderElect[round] = True
+            partialSig = [sig for sig in elect.values()]
+            data = encode(round)
+            qc = AssembleIntactTSPartial(partialSig, self.tsPublicKey, data, self.quorumNum, self.nodeNum)
+            qcAsInt = int.from_bytes(qc, byteorder='big')
+            leader_id = qcAsInt % self.nodeNum
+            leader_name = f"node{leader_id}"
+            self.leader[round - 1] = leader_name
+            self.tryToCommitLeader(round - 1)
+
+    def tryToNextRound(self, round):
+        with self.lock:
+            if round != self.round:
+                return
+            count = self.moveRound.get(round, 0)
+            if count >= self.quorumNum:
+                self.round += 1
+                self.nextRound_round = round + 1
+                self.nextRound.set()
+                self.tryToNextRound(round + 1)
+
+    def tryToCommitLeader(self, round):
+        if round <= self.chain.round:
+            return
+        leader = self.leader.get(round)
+        if leader and leader in self.done.get(round, {}) and leader in self.dag.get(round, {}):
+            self.tryToCommitAncestorLeader(round)
+            block = self.dag[round][leader]
+            hash = block.get_hash_as_string()
+            self.chain.round = round
+            self.chain.blocks[hash] = block
+            self.logger.info("commit the leader block", node=self.name, round=round, block_proposer=block.Sender)
+            commit_time = time.time_ns()
+            latency = commit_time - block.TimeStamp
+            self.evaluation.append(latency)
+            self.commitAncestorBlocks(round)
+            self.commitTime.append(commit_time)
+
     
