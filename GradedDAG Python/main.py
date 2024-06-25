@@ -70,14 +70,15 @@ def setup_nodes( batch_size, round):
     for i in range(4):
         confs[i] = Config(names[i], 10, cluster_addr, cluster_port, None, cluster_addr_with_ports, None, pub_key_map, priv_keys[i], pub_poly, shares[i], False, batch_size, round)
         nodes[i] = Node(confs[i])
-        if not nodes[i].network.start_p2p_listen():
+
+        """ if not nodes[i].network.start_p2p_listen():
             raise Exception("Failed to start P2P listener")
         nodes[i].InitCBC(confs[i])
 
     for i in range(4):
         nodes[i].establish_p2p_conns()
 
-    time.sleep(1)
+    time.sleep(1) """
     return nodes
 
 
@@ -96,4 +97,4 @@ if __name__ == "__main__":
     round = 1
     nodes = setup_nodes( batch_size, round)
     for node in nodes:
-        print(f"Node Name: {node.name}, Address: {node.address}, Port: {node.port}")
+        print(f"Node Name: {node.name}, Address: {node.clusterAddr}, Port: {node.clusterPort}")
