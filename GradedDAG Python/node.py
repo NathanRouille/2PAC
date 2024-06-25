@@ -11,7 +11,7 @@ from network import NetworkTransport
 from sign import *
 from data_struct import Block, Chain,Done,Elect  
 from tools import encode
-from rcbc import NewCBCer
+from rcbc import *
 
 ##############         CLASSES         ##############
 #####################################################
@@ -87,7 +87,7 @@ class Node:
         self.logger.info("the total commit", block_number=blockNum, time=pastTime)
 
     def InitCBC(self, conf: Config):
-        self.cbc = NewCBCer(self.name, conf.clusterAddrWithPorts, self.trans, self.quorumNum, self.nodeNum, self.privateKey, self.tsPublicKey, self.tsPrivateKey)
+        self.cbc = CBC(self.name, conf.clusterAddrWithPorts, self.trans, self.quorumNum, self.nodeNum, self.privateKey, self.tsPublicKey, self.tsPrivateKey)
 
     def selectPreviousBlocks(self, round):
         with self.lock:
