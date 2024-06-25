@@ -164,4 +164,21 @@ class Node:
                 self.nextRound.set()
                 self.tryToNextRound(round + 1)
 
+    def tryToCommitLeader(self, round):
+        if round <= self.chain.round:
+            return
+        leader = self.leader.get(round)
+        if leader and leader in self.done.get(round, {}) and leader in self.dag.get(round, {}):
+            self.tryToCommitAncestorLeader(round)
+            block = self.dag[round][leader]
+            hash = block.get_hash_as_string()
+            self.chain.round = round
+            self.chain.blocks[hash] = block
+            self.logger.info("commit the leader block", node=self.name, round=round, block_proposer=block.Sender)
+            commit_time = time.time_ns()
+            latency = commit_time - block.TimeStamp
+            self.evaluation.append(latency)
+            self.commitAncestorBlocks(round)
+            self.commitTime.append(commit_time)
+
     
