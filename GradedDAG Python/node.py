@@ -1,4 +1,3 @@
-import ed25519
 import math
 import threading
 import time
