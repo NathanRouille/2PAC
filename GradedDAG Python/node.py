@@ -1,3 +1,6 @@
+##############         IMPORTS         ##############
+#####################################################
+# Importer les bibliothèques nécessaires
 import ed25519
 import math
 import threading
@@ -11,6 +14,8 @@ from done import Done
 from elect import Elect
 from cbc import CBCer
 
+##############         CLASSES         ##############
+#####################################################
 class Node:
     def __init__(self, conf: Config):
         self.name = conf.name
@@ -56,6 +61,8 @@ class Node:
         self.cbc = None
 
 
+#############         FUNCTIONS         #############
+#####################################################
     def RunLoop(self):
         currentRound = 1
         start = time.time_ns()
