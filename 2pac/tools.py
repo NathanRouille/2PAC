@@ -3,6 +3,7 @@ import threading
 import time
 import json
 from com import Com
+from data_struct import *
 
 def broadcast(message):
     pass

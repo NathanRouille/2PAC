@@ -3,7 +3,7 @@ import socket
 import threading
 import time
 import json
-from node import Node
+from data_struct import Node
 
 
 class Com:
