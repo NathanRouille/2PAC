@@ -181,4 +181,20 @@ class Node:
             self.commitAncestorBlocks(round)
             self.commitTime.append(commit_time)
 
+    def tryToCommitAncestorLeader(self, round):
+        if round < 2 or round - 2 <= self.chain.round:
+            return
+        validLeader = self.findValidLeader(round)
+        for i in range(1, round, 2):
+            if i in validLeader:
+                block = self.dag[i][self.leader[i]]
+                hash = block.get_hash_as_string()
+                self.chain.round = i
+                self.chain.blocks[hash] = block
+                self.logger.info("commit the ancestor leader block", node=self.name, round=i, block_proposer=block.Sender)
+                commit_time = time.time_ns()
+                latency = commit_time - block.TimeStamp
+                self.evaluation.append(latency)
+                self.commitAncestorBlocks(i)
+
     
