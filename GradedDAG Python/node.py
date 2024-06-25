@@ -60,6 +60,9 @@ class Node:
         self.commitTime = []
         self.cbc = None
 
+    def show(self):
+        print(f"Node {self.name} is running")
+
 
 #############         FUNCTIONS         #############
 #####################################################

@@ -123,4 +123,4 @@ if __name__ == "__main__":
     round = 1
     nodes = setup_nodes( batch_size, round)
     for node in nodes:
-        print("1")
+        node.show()
