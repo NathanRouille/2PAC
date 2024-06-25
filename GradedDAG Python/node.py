@@ -35,9 +35,9 @@ class Node:
         self.clusterAddr = conf.clusterAddr
         self.clusterPort = conf.clusterPort
         self.clusterAddrWithPorts = conf.clusterAddrWithPorts
-        self.isFaulty = conf.isFaulty
+        self.IsFaulty = conf.IsFaulty
 
-        self.maxPool = conf.maxPool
+        self.MaxPool = conf.MaxPool
         self.trans = NetworkTransport()
         self.batchSize = conf.batchSize
         self.roundNumber = conf.round

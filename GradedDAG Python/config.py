@@ -7,7 +7,7 @@
 class Config:
     def __init__(self, name, num_nodes, cluster_addr, cluster_port, other_param1, cluster_addr_with_ports, other_param2, pub_key_map, priv_key, pub_poly, share, some_flag, batch_size, round):
         self.name = name
-        self.num_nodes = num_nodes
+        self.MaxPool = num_nodes
         self.clusterAddr = cluster_addr
         self.clusterPort = cluster_port
         self.other_param1 = other_param1
@@ -18,7 +18,7 @@ class Config:
         self.pub_poly = pub_poly
         self.share = share
         #self.log_level = log_level                 #Je l'enleve dans Node
-        self.some_flag = some_flag
+        self.IsFaulty = some_flag
         self.batch_size = batch_size
         self.round = round
 
