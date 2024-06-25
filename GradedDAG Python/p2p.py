@@ -12,11 +12,13 @@ from main import *
 #####################################################
 
 class Com:
-    def __init__(self,node: Node, host, port, peers):
+    def __init__(self,node: Node , host = None, port = None, peers = None):
         #print("Node class initialized")
-        self.host = node.clusterAddr
-        self.port = node.clusterPort
-        self.peers = node.clusterAddrWithPorts
+        self.host = 'localhost'
+        for val in node.clusterPort:
+            if val == node.name:
+                self.port = node.clusterPort[val]
+        self.peers = [('localhost', x ) for x in node.clusterPort.values() if x != self.port]
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.threads = []
@@ -122,5 +124,15 @@ if __name__ == "__main__":
     batch_size = 10
     round = 1
     nodes = setup_nodes( batch_size, round)
-    for node in nodes:
-        node.show()
+    com_0 = Com(nodes[0])
+    com_1 = Com(nodes[1])
+    com_2 = Com(nodes[2])
+    com_3 = Com(nodes[3])
+    com_0.start()
+    com_1.start()
+    com_2.start()
+    com_3.start()
+    com_0.broadcast_message("Hello, world!")
+    print(com_0)
+
+        
