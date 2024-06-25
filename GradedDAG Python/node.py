@@ -93,4 +93,11 @@ class Node:
                 previousHash[sender] = hash
         return previousHash
 
+    def storeDone(self, done: Done):
+        if done.Round not in self.done:
+            self.done[done.Round] = {}
+        if done.BlockSender not in self.done[done.Round]:
+            self.done[done.Round][done.BlockSender] = done
+            self.moveRound[done.Round] = self.moveRound.get(done.Round, 0) + 1
+
     
