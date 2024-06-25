@@ -27,11 +27,11 @@ struct CBC {
 }
 
 impl CBC {
-    pub fn return_block_chan(&self) -> &Sender<Block> {
+    pub fn ReturnBlockChan(&self) -> &Sender<Block> {
         &self.blockCh
     }
 
-    pub fn return_done_chan(&self) -> &Sender<Done> {
+    pub fn ReturnDoneChan(&self) -> &Sender<Done> {
         &self.doneCh
     }
 
@@ -67,6 +67,8 @@ impl CBC {
     }
 
     pub fn BroadcastBlock(&self, block: &Block) {
+        /*diffuse un bloc et, en cas de succès, met à jour l'état de blockSend pour indiquer que le bloc a été envoyé, 
+        en utilisant un verrou en écriture pour garantir une modification sécurisée.*/
         if let Err(err) = self.broadcast(ProposalTag, block) {
             panic!("{}", err);
         }
@@ -75,18 +77,20 @@ impl CBC {
     }
 
     pub fn BroadcastVote(&self, block_sender: String, round: u64) {
+        /*diffuse un vote pour un bloc spécifique à, et en cas d'erreur, elle déclenche une panique avec le message d'erreur associé.*/
         let vote = Vote {
             vote_sender: self.name.clone(),
             block_sender,
             round,
         };
-        if let Err(err) = self.broadcast(VoteTag, &vote) {
+        if let Err(err) = self.broadcast(VoteTag, &vote) {  //VoteTag est definie dans msg_type.res ,définie le type de msg
             panic!("{}", err);
         }
     }
 
     pub fn BroadcastReady(&self, round: u64, hash: Vec<u8>, block_sender: String) {
-        let partial_sig = sign_ts_partial(&self.tsPrivateKey, &hash); // Assuming `sign_ts_partial` is a function that signs the hash with the threshold signature private key
+        let partial_sig = SignTSPartial(&self.tsPrivateKey, &hash); // Assuming SignTSPartial is a function that signs the hash with the threshold signature private key
+        //SignTSPartial se trouve dans le fichier sign 
         let ready = Ready {
             ready_sender: self.name.clone(),
             block_sender,
@@ -102,49 +106,49 @@ impl CBC {
     pub fn HandleBlockMsg(&self, block: &Block) {
         {
             let _lock = self.lock.write().unwrap(); // Lock is acquired and automatically released at the end of the scope
-            self.store_block_msg(block);
+            self.storeBlockMsg(block);
         } // Lock is released here due to the drop of _lock
 
-        // Spawning asynchronous tasks for broadcasting vote and checking quorum
+        // Crée des clone pour les utiliser dans lfor broadcasting vote and checking quorum
         let self_clone = self.clone();
         let block_clone = block.clone();
         std::thread::spawn(move || {
-            self_clone.broadcast_vote(block_clone.sender.clone(), block_clone.round);
+            self_clone.BroadcastVote(block_clone.sender.clone(), block_clone.round);
         });
 
         let self_clone = self.clone();
         let block_sender = block.sender.clone();
         let round = block.round;
         std::thread::spawn(move || {
-            self_clone.check_if_quorum_vote(round, block_sender);
+            self_clone.checkIfQuorumVote(round, block_sender);
         });
     }
 
     pub fn HandleVoteMsg(&self, vote: &Vote) {
         {
             let _lock = self.lock.write().unwrap(); // Lock is acquired and automatically released at the end of the scope
-            self.store_vote_msg(vote);
+            self.storeVoteMsg(vote);
         } // Lock is released here
 
         // Spawning an asynchronous task for checking quorum vote
         let self_clone = self.clone();
         let vote_clone = vote.clone();
         std::thread::spawn(move || {
-            self_clone.check_if_quorum_vote(vote_clone.round, vote_clone.block_sender.clone());
+            self_clone.checkIfQuorumVote(vote_clone.round, vote_clone.block_sender.clone());
         });
     }
 
     pub fn handleReadyMsg(&self, ready: &Ready) {
         {
             let _lock = self.lock.write().unwrap(); // Lock is acquired and automatically released at the end of the scope
-            self.store_ready_msg(ready);
+            self.storeReadyMsg(ready);
         } // Lock is released here
 
         // Spawning an asynchronous task for checking quorum ready
         let self_clone = self.clone();
         let ready_clone = ready.clone();
         std::thread::spawn(move || {
-            self_clone.check_if_quorum_ready(&ready_clone);
+            self_clone.checkIfQuorumReady(&ready_clone);
         });
     }
 
@@ -180,7 +184,7 @@ impl CBC {
                     let self_clone = self.clone();
                     let block_sender_clone = block_sender.clone();
                     std::thread::spawn(move || {
-                        self_clone.try_to_output_blocks(round, block_sender_clone);
+                        self_clone.tryToOutputBlocks(round, block_sender_clone);
                     });
                 }
             }
@@ -225,11 +229,11 @@ impl CBC {
 
             // Only send ready for odd blocks and not for slow blocks
             if round % 2 == 1 && !self.blockSend.read().unwrap().contains_key(&(round + 1)) {
-                let hash = block.get_hash().unwrap(); // Assuming `get_hash` is a method that computes the hash of the block
+                let hash = block.getHash().unwrap(); // Assuming `get_hash` is a method that computes the hash of the block
                 let self_clone = self.clone();
                 let block_sender = block.sender.clone();
                 std::thread::spawn(move || {
-                    self_clone.broadcast_ready(round, hash, block_sender);
+                    self_clone.broadcastReady(round, hash, block_sender);
                 });
             }
             self.blockCh.send(block.clone()).unwrap();
@@ -238,13 +242,13 @@ impl CBC {
 
     pub fn broadcast(&self, msg_type: u8, msg: &impl Serialize) -> Result<(), Box<dyn Error>> {
         let msg_as_bytes = bincode::serialize(msg)?;
-        let sig = self.sign_ed25519(&msg_as_bytes); // Assuming `sign_ed25519` is a method that signs the message
+        let sig = self.SignEd25519(&msg_as_bytes); // Assuming `sign_ed25519` is a method that signs the message
 
         for addr_with_port in &self.clusterAddrWithPorts {
-            let mut net_conn = self.connPool.get_conn(addr_with_port)?; // Assuming `get_conn` is a method that retrieves a connection from the pool
-            conn::send_msg(&mut net_conn, msg_type, &msg_as_bytes, &sig)?; // Assuming `send_msg` is a function that sends the message
+            let mut net_conn = self.connPool.GetConn(addr_with_port)?; // Assuming `get_conn` is a method that retrieves a connection from the pool
+            conn::SendMsg(&mut net_conn, msg_type, &msg_as_bytes, &sig)?; // Assuming `send_msg` is a function that sends the message
 
-            self.connPool.return_conn(net_conn)?; // Assuming `return_conn` is a method that returns the connection to the pool
+            self.connPool.ReturnConn(net_conn)?; // Assuming `return_conn` is a method that returns the connection to the pool
         }
         Ok(())
     }

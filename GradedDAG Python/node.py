@@ -1,13 +1,14 @@
 ##############         IMPORTS         ##############
 #####################################################
 # Importer les bibliothèques nécessaires
-import ed25519
 import math
 import threading
 import time
+
+#Importer d'autres fichier
 from config import Config
 from conn import NetworkTransport
-from sign import VerifySignEd25519, AssembleIntactTSPartial
+from sign import *
 from block import Block, encode  # Assumed imports
 from chain import Chain
 from done import Done
@@ -260,10 +261,12 @@ class Node:
             self.logger.error("node is unknown", node=peer)
             return False
         dataAsBytes = encode(data)
-        valid, err = VerifySignEd25519(pubKey, dataAsBytes, sig)
+        valid = Sign.verify_signature(pubKey, sig)
+        '''
         if err:
             self.logger.error("fail to verify the ED25519 signature", error=err)
             return False
+        '''
         return valid
 
     def IsFaultyNode(self):
