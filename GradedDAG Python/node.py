@@ -219,4 +219,27 @@ class Node:
                 break
         return validLeader
 
+    def commitAncestorBlocks(self, round):
+        templeBlocks = {}
+        block = self.dag[round][self.leader[round]]
+        hash = block.get_hash_as_string()
+        templeBlocks[round] = {hash: block}
+        r = round
+        while r > 0:
+            templeBlocks[r - 1] = {}
+            for hash, b in templeBlocks[r].items():
+                if hash not in self.chain.blocks:
+                    self.chain.blocks[hash] = b
+                    commit_time = time.time_ns()
+                    latency = commit_time - b.TimeStamp
+                    self.evaluation.append(latency)
+                for sender in b.PreviousHash:
+                    linkBlock = self.dag[r - 1][sender]
+                    h = linkBlock.get_hash_as_string()
+                    if h not in self.chain.blocks:
+                        templeBlocks[r - 1][h] = linkBlock
+            if not templeBlocks[r - 1]:
+                break
+            r -= 1
+
     
