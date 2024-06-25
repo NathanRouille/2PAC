@@ -242,4 +242,9 @@ class Node:
                 break
             r -= 1
 
+    def NewBlock(self, round, previousHash):
+        batch = [generateTX(20) for _ in range(self.batchSize)]
+        timestamp = time.time_ns()
+        return Block(self.name, round, previousHash, batch, timestamp)
+
     
