@@ -3,17 +3,56 @@
 # Importer les bibliothèques nécessaires
 import socket
 import threading
-
+import threading
+import queue
+import logging
+import time
+from typing import Dict, List, Type, Optional, Tuple
+import contextlib
 #Importer d'autres fichier
 
 ##############         CLASSES         ##############
 #####################################################
 class NetworkTransport:
-    def __init__(self, server_socket, timeout, _, max_pool, reflected_types_map):
-        self.server_socket = server_socket
-        self.timeout = timeout
+    def __init__(self, max_pool: int, reflected_types_map: Dict[int, Type], logger: logging.Logger, timeout: float):
+        self.conn_pool: Dict[str, List['NetConn']] = {}
+        self.conn_pool_lock = threading.Lock()
         self.max_pool = max_pool
+
+        self.msg_ch = queue.Queue()  # Channel for transferring messages between NetworkTransport and outer variables
+
         self.reflected_types_map = reflected_types_map
+
+        self.logger = logger
+
+        self.shutdown = False
+        self.shutdown_ch = threading.Event()
+        self.shutdown_lock = threading.Lock()
+
+        self.stream = None  # Stream layer implementation (not provided in original code)
+
+        # Context for cancelling existing connection handlers
+        self.stream_ctx = contextlib.nullcontext()
+        self.stream_ctx_lock = threading.RLock()
+
+        self.timeout = timeout
+
+    def start(self):
+        self.logger.info("NetworkTransport started")
+        # Start the network transport functionality
+        # Example: threading.Thread(target=self._network_handler, daemon=True).start()
+
+    def stop(self):
+        with self.shutdown_lock:
+            if not self.shutdown:
+                self.shutdown = True
+                self.shutdown_ch.set()
+                self.logger.info("NetworkTransport is shutting down")
+                # Cancel existing connection handlers
+                with self.stream_ctx_lock:
+                    if hasattr(self.stream_ctx, 'cancel'):
+                        self.stream_ctx.cancel()
+
 
 
 #############         FUNCTIONS         #############
