@@ -240,4 +240,20 @@ impl CBC {
         }
     }
 
+    pub fn broadcast(&self, tag: u8, msg: &dyn Serialize) -> Result<(), String> {
+        let msg_bytes = bincode::serialize(msg).map_err(|err| err.to_string())?;
+        let mut errors = Vec::new();
+        for (addr, port) in &self.clusterAddrWithPorts {
+            let addr = format!("{}:{}", addr, port);
+            let conn = self.connPool.getConn(&addr).map_err(|err| err.to_string())?;
+            if let Err(err) = conn.send(tag, &msg_bytes) {
+                errors.push(err.to_string());
+            }
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors.join(", "))
+        }
+    }
 
