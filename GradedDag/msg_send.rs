@@ -53,3 +53,15 @@ impl Node {
     }
 }
 
+
+// Structure de bloc
+#[derive(Serialize, Deserialize)]
+pub struct Block {
+    sender: String,
+    round: u64,
+    previous_hash: HashMap<String, Vec<u8>>,
+    txs: Vec<Vec<u8>>,
+    timestamp: i64,
+}
+
+
