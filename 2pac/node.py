@@ -77,7 +77,8 @@ class Node:
         with self.lock:
             self.storeBlockMsg(block)
         threading.Thread(target=self.broadcastVote, args=(block.sender, block.round)).start()
-        threading.Thread(target=self.checkIfQuorumVote, args=(block.round, block.sender)).start()
+        threading.Thread(target=self.checkIfQuorumVote, args=(block.round, block.sender)).start() #pq on test quorum ? On peut récupérer des signatures ?
+        self.tryToCommit()
 
     def handleVoteMsg(self, vote: Vote):
         with self.lock:
@@ -93,21 +94,18 @@ class Node:
         with self.lock:
             self.storeDoneMsg(done)
         threading.Thread(target=self.tryToNextRound, args=(done.round,)).start()
-        self.tryToCommitLeader(done.round)
+        self.tryToCommit()
 
     def handleElectMsg(self, elect: Elect):
         with self.lock:
             self.storeElectMsg(elect)
             self.tryToElectLeader(elect.Round)
 
+
+
+
     def storeBlockMsg(self, block: Block):
-        if block.round not in self.pendingBlocks:
-            self.pendingBlocks[block.round] = {}
-        self.pendingBlocks[block.round][block.sender] = block
-
-
-
-
+        self.blocks[block.Sender] = block
 
     def storeVoteMsg(self, vote: Vote):
         if vote.round not in self.pendingVote:
@@ -130,7 +128,6 @@ class Node:
 
     def storeElectMsg(self, elect: Elect):
         self.elect[elect.Sender] = elect.PartialSig
-
 
 
 
@@ -222,7 +219,7 @@ class Node:
     def RunLoop(self): # à quoi sert RunLoop (quand est-ce que c'est appelé)
         #start = time.time_ns()
         self.broadcastBlock(currentRound)
-        if currentRound % 2 == 0:
+        if currentRound % 2 == 0: #changer pour qu'une var dise quand on peut send Elect
             self.broadcastElect(currentRound)
         self.nextRound.wait()
         currentRound = self.nextRound_round
@@ -240,26 +237,14 @@ class Node:
 
         self.logger.info("the average", latency=latency, throughput=throughPut)
         self.logger.info("the total commit", block_number=blockNum, time=pastTime)'''
-
-
-
-
-    def tryToUpdateBlocks(self, block: Block):
-        with self.lock:
-            self.blocks[block.Sender] = block
-            #pour les blocks2 ?
-            '''if block.Round % 2 == 0:
-                self.moveRound += 1
-                self.tryToNextRound(block.Round)
-            else:'''
-            self.tryToCommitLeader(block.Round)
+            
 
     def tryToNextRound(self, round):
         with self.lock:
             if self.moveRound >= self.quorumNum:
                 self.round += 1
 
-    def tryToCommitLeader(self, round):
+    def tryToCommit(self):
         if self.leader and self.leader in self.done and self.leader in self.blocks:
             block = self.blocks[self.leader]
             hash = block.get_hash_as_string()
