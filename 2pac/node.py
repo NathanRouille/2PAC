@@ -59,10 +59,11 @@ class Node:
             msg_type = msgWithSig["type"]
             msg_publickey= msgWithSig["public_key"]
             msg_signature= msgWithSig["signature"]
-            if not verify_signed(msg_signature):
+            print(f"Verify msg : {verify_signed(msg_signature)}")
+            """ if not verify_signed(msg_signature):
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
-                continue
-            if msg_type == 'Block1':
+                continue """
+            """ if msg_type == 'Block1':
                 threading.Thread(target=self.handleBlock1Msg, args=(msgAsserted,)).start()
             elif msg_type == 'Vote1':
                 threading.Thread(target=self.handleVote1Msg, args=(msgAsserted,)).start()
@@ -71,7 +72,7 @@ class Node:
             elif msg_type == 'Vote2':
                 threading.Thread(target=self.handleVote2Msg, args=(msgAsserted,)).start()
             elif msg_type == 'Elect':
-                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start()
+                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start() """
             
 
 
@@ -139,7 +140,7 @@ class Node:
 
         elif type(msg) == Elect:
             if len(self.elect) >= self.quorumNum:
-                threading.Thread(target=self.tryToElectLeader).start()
+                threading.Thread(target=self.broadcastLeader).start()
 
     def tryToNextRound(self):
         with self.lock:
@@ -147,10 +148,10 @@ class Node:
                 self.round += 1
 
     def tryToCommit(self):
-        if self.leader and self.leader in self.qc2 and self.leader in self.blocks: #leader dans qc2 = leader done avant
-            block = self.blocks[self.leader]
-            hash = block.get_hash_as_string()
-            self.chain[hash] = block
+        if self.leader and self.leader in self.qc2 and self.leader in self.blocks1: #leader dans qc2 = leader done avant
+            leader_block = self.blocks1[self.leader]
+            leader_hash = leader_block.get_hash_as_string()
+            self.chain[leader_hash] = leader_block
             #self.logger.info("commit the leader block", node=self.name, round=round, block_proposer=block.Sender)
             #commit_time = time.time_ns()
             #latency = commit_time - block.TimeStamp
@@ -158,12 +159,9 @@ class Node:
             #self.commitTime.append(commit_time)
 
 
-    def tryToElectLeader(self, round):
-        if len(self.elect) >= self.quorumNum and not self.leaderElected:
-            self.leaderElected = True
-            leader_name = f"node{self.qccoin}"
-            self.leader[round - 1] = leader_name
-            self.tryToCommitLeader(round - 1)
+    def BroadcastLeader(self):
+        self.leader[1] = self.qccoin
+        broadcast
 
     """ def broadcast(self, msgType, msg):
         msgAsBytes = encode(msg)
