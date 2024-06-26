@@ -8,8 +8,9 @@ import time
 
 
 class Com:
-    def __init__(self, port = None, peers = None):
+    def __init__(self,id = None, port = None, peers = None):
         #print("Node class initialized")
+        self.id = id
         self.host = 'localhost'
         self.port = port
         self.peers = peers
@@ -67,8 +68,10 @@ class Com:
                 message = json.loads(message)
                 #self.show_message(message)
                 self.recv.put(message)
+                """ print(f"id : {self.id}")
+                print(f"recv: {self.recv}")
                 print(verify_signed(self.recv.get()["signature"]))
-                print(f'recv of {self.port} :: {type(self.recv.get())}')
+                print(f'recv of {self.port} :: {type(self.recv.get())}') """
             except Exception as e:
                 print(f"Error handling client: {e}")
                 break
