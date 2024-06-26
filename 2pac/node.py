@@ -5,7 +5,7 @@ import random
 
 #Importer d'autres fichier
 from sign import verify_signed
-from data_struct import Block, Chain,Done,Elect  
+from data_struct import *  
 from tools import *
 from com import *
 
@@ -135,7 +135,7 @@ class Node:
 
     def checkIfQuorumVote(self, round, blockSender):
         if self.pendingVote >= self.quorumNum:
-            threading.Thread(target=self.tryToOutputBlocks, args=(round, blockSender)).start()
+            threading.Thread(target=self.tryToOutputBlocks, args=(round, blockSender)).start() #output uniquement notre block
 
     def checkIfQuorumReady(self, ready: Ready):
         with self.lock: #est-ce que c'est nécessaire de lock
