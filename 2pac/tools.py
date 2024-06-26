@@ -83,8 +83,8 @@ def to_json(obj,node):
     elif isinstance(obj, Block2):
         data = {
             'sender': obj.vote_sender,
-            'Block_sender': obj.block_sender,
-            'QC_sender': obj.qc_sender
+            'Block_sender': obj.block_sender,  
+            'qc': obj.qc
         }
         signed = Sign.sign_message(node.privatekey, json.dumps(data))
         return json.dumps({

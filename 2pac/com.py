@@ -17,6 +17,7 @@ class Com:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.threads = []
+        self.recv = []
 
     def start(self):
         #print(f"Node started at {self.host}:{self.port}")
@@ -62,10 +63,12 @@ class Com:
                 if not data:
                     break
                 message = data.decode('utf-8')
-                print(type(json.loads(message)['data']))
+                #print(type(json.loads(message)['data']))
                 #print(f"Pub: {find_publickey(message)}")
 
                 self.show_message(message)
+                self.recv.append(json.loads(message))
+                print(f'recv of {self.port} :: {self.recv}')
             except Exception as e:
                 print(f"Error handling client: {e}")
                 break
@@ -94,3 +97,4 @@ class Com:
 
 def find_publickey(message):
     return base64.b64decode(json.loads(message)["public_key"])
+
