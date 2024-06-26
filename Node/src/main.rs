@@ -145,3 +145,15 @@ fn main() {
     // Lance le noeud
     node.run();
 }
+
+impl Node {
+    fn run(&mut self) {
+       
+        // Crée un nouveau noeud
+        let mut node = new_node(&conf);
+
+        // Lance le noeud
+        node.run();
+    }   
+}
+        
