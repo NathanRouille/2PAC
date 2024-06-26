@@ -275,3 +275,20 @@ impl CBC {
         }
     }
 
+    pub fn handle_msg(&self, tag: u8, msg: &[u8]) {
+        match tag {
+            ProposalTag => {
+                let block = bincode::deserialize(msg).unwrap();
+                self.HandleBlockMsg(&block);
+            }
+            VoteTag => {
+                let vote = bincode::deserialize(msg).unwrap();
+                self.HandleVoteMsg(&vote);
+            }
+            ReadyTag => {
+                let ready = bincode::deserialize(msg).unwrap();
+                self.handleReadyMsg(&ready);
+            }
+            _ => panic!("Unknown message tag: {}", tag),
+        }
+    }
