@@ -76,11 +76,11 @@ class Node:
     def handleBlockMsg(self, block: Block):
         with self.lock:
             self.storeBlockMsg(block)
-        threading.Thread(target=self.broadcastVote, args=(block.sender, block.round)).start()
+        threading.Thread(target=self.broadcastVote, args=(block.sender)).start()
         threading.Thread(target=self.checkIfQuorumVote, args=(block.round, block.sender)).start() #pq on test quorum ? On peut récupérer des signatures ?
         self.tryToCommit()
 
-    def handleVoteMsg(self, vote: Vote):
+    def handleVoteMsg(self, vote: Vote): #vérifier signature et 1er vote de ce replica pour ce block
         with self.lock:
             self.storeVoteMsg(vote)
         threading.Thread(target=self.checkIfQuorumVote, args=(vote.round, vote.blockSender)).start()
@@ -88,12 +88,12 @@ class Node:
     def handleReadyMsg(self, ready: Ready):
         with self.lock:
             self.storeReadyMsg(ready)
-        threading.Thread(target=self.checkIfQuorumReady, args=(ready,)).start()
+        threading.Thread(target=self.checkIfQuorumReady, args=(ready)).start()
 
     def handleDoneMsg(self, done: Done):
         with self.lock:
             self.storeDoneMsg(done)
-        threading.Thread(target=self.tryToNextRound, args=(done.round,)).start()
+        threading.Thread(target=self.tryToNextRound).start()
         self.tryToCommit()
 
     def handleElectMsg(self, elect: Elect):
@@ -108,18 +108,14 @@ class Node:
         self.blocks[block.Sender] = block
 
     def storeVoteMsg(self, vote: Vote):
-        if vote.round not in self.pendingVote:
-            self.pendingVote[vote.round] = {}
-        if vote.blockSender not in self.pendingVote[vote.round]:
-            self.pendingVote[vote.round][vote.blockSender] = 0
-        self.pendingVote[vote.round][vote.blockSender] += 1
+        if vote.blockSender not in self.pendingVote:
+            self.pendingVote[vote.blockSender] = 0
+        self.pendingVote[vote.blockSender] += 1
 
-    def storeReadyMsg(self, ready: Ready):
-        if ready.round not in self.pendingReady:
-            self.pendingReady[ready.round] = {}
-        if ready.blockSender not in self.pendingReady[ready.round]:
-            self.pendingReady[ready.round][ready.blockSender] = {}
-        self.pendingReady[ready.round][ready.blockSender][ready.readySender] = ready.partialSig
+    def storeReadyMsg(self, ready: Ready): #readySender peut être différent de ready.blockSender ? Sinon enlever if et faire dict 1 dimension
+        if ready.blockSender not in self.pendingReady:
+            self.pendingReady[ready.blockSender] = {}
+        self.pendingReady[ready.blockSender][ready.readySender] = ready.partialSig
 
     def storeDoneMsg(self, done: Done):
         if done.BlockSender not in self.done:
@@ -132,22 +128,18 @@ class Node:
 
 
     def checkIfQuorumVote(self, round, blockSender):
-        with self.lock:
-            voteCount = self.pendingVote.get(round, {}).get(blockSender, 0)
+        with self.lock: #est-ce que c'est nécessaire de lock
+            voteCount = self.pendingVote.get(blockSender, 0)
         if voteCount >= self.quorumNum:
-            threading.Thread(target=self.tryToOutputBlocks, args=(round, blockSender)).start()
+            threading.Thread(target=self.tryToOutputBlocks, args=(round, blockSender)).start() #on peut rel
 
     def checkIfQuorumReady(self, ready: Ready):
-        with self.lock:
-            readies = self.pendingReady.get(ready.round, {}).get(ready.blockSender, {})
-            if ready.round not in self.doneOutput:
-                self.doneOutput[ready.round] = {}
-            if len(readies) >= self.quorumNum and not self.doneOutput[ready.round].get(ready.blockSender, False):
-                self.doneOutput[ready.round][ready.blockSender] = True
-                partialSig = [parSig for parSig in readies.values()]
+        with self.lock: #est-ce que c'est nécessaire de lock
+            if len(self.pendingReady) >= self.quorumNum and not self.doneOutput.get(ready.blockSender, False):
+                self.doneOutput[ready.blockSender] = True
+                partialSig = [parSig for parSig in self.pendingReady.values()]
         doneMsg = Done(doneSender=self.name, blockSender=ready.blockSender, done=partialSig, hash=ready.hash, round=ready.round)
         self.doneCh.put(doneMsg)
-
 
 
         
@@ -183,13 +175,13 @@ class Node:
         with self.lock:
             self.blockSend[block.round] = True
 
-    def broadcastVote(self, blockSender, round):
-        vote = Vote(voteSender=self.name, blockSender=blockSender, round=round)
+    def broadcastVote(self, blockSender):
+        vote = Vote(voteSender=self.name, blockSender=blockSender)
         self.broadcast('VoteTag', vote)
 
-    def broadcastReady(self, round, hash, blockSender):
+    def broadcastReady(self, hash, blockSender):
         partialSig = Sign.sign_ts_partial(self.tsPrivateKey, hash)
-        ready = Ready(readySender=self.name, blockSender=blockSender, round=round, hash=hash, partialSig=partialSig)
+        ready = Ready(readySender=self.name, blockSender=blockSender, hash=hash, partialSig=partialSig)
         self.broadcast('ReadyTag', ready)
 
 
@@ -239,7 +231,7 @@ class Node:
         self.logger.info("the total commit", block_number=blockNum, time=pastTime)'''
             
 
-    def tryToNextRound(self, round):
+    def tryToNextRound(self):
         with self.lock:
             if self.moveRound >= self.quorumNum:
                 self.round += 1
