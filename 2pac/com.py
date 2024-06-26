@@ -1,7 +1,6 @@
 ##fichier de communication
 import socket
 import threading
-from node import Node
 from sign import *
 import queue
 import json
@@ -9,11 +8,11 @@ import time
 
 
 class Com:
-    def __init__(self,node: Node , host = None, port = None, peers = None):
+    def __init__(self, port = None, peers = None):
         #print("Node class initialized")
         self.host = 'localhost'
-        self.port = node.port
-        self.peers = node.peers
+        self.port = port
+        self.peers = peers
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.threads = []
@@ -23,6 +22,7 @@ class Com:
         #print(f"Node started at {self.host}:{self.port}")
         self.start_server()
         self.connect_to_peers()
+        return self
 
     def start_server(self):
         #print(f"Server started at {self.host}:{self.port}")

@@ -1,8 +1,9 @@
-from tools import start_com, broadcast, to_json
+from tools import broadcast, to_json
 import random
 from node import Node
 from sign import Sign
 from data_struct import *
+import threading
 
 list_ports = [random.randint(1000, 9000) for i in range(4)]
 ports = {
@@ -31,7 +32,7 @@ def setup_nodes():
 def start_coms(Nodes):
     coms = []
     for node in Nodes:
-        com = start_com(node)
+        com = node.com.start()
         coms.append(com)
     return coms
 
@@ -39,7 +40,8 @@ if __name__ == "__main__":
     Nodes = setup_nodes()
     coms = start_coms(Nodes)
     print("Nodes and coms setup")
+    threading.Thread(target=Nodes[1].handleMsgLoop).start()
+    print("Node 1 started")
     broadcast(coms[0], to_json(block, Nodes[0]))
-    broadcast(coms[1],to_json(vote,Nodes[1]),True)
 
                                                                                         

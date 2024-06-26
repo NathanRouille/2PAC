@@ -10,10 +10,10 @@ from sign import *
 def handlemessage(message):
     pass
 
-def start_com(node):
-    com = Com(node)
+""" def start_com(node):
+    com = Com(node.port, node.peers)
     com.start()
-    return com
+    return com """
 
 def broadcast(com, message,delay = False):
     com.broadcast_message(message, delay)

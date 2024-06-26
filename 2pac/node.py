@@ -7,7 +7,7 @@ import random
 from sign import verify_signed, Sign
 from data_struct import *  
 from tools import *
-from com import *
+from com import Com
 
 random.seed(1234)
 
@@ -55,12 +55,16 @@ class Node:
         self.blockOutput = {}
         self.doneOutput = {}
         self.blockSend = {}
+        self.com=Com(self.port,self.peers)
 
     def handleMsgLoop(self):
         msgCh = self.com.recv
+        print(msgCh)
         while True:
+            print("ok2")
             msgWithSig = msgCh.get()
-            if not msgWithSig:
+            print(f"Message sign: {msgWithSig}")
+            """ if not msgWithSig:
                 continue
             msgAsserted = msgWithSig["data"]
             msg_type = msgWithSig["type"]
@@ -78,7 +82,7 @@ class Node:
             elif msg_type == 'Vote2':
                 threading.Thread(target=self.handleDoneMsg, args=(msgAsserted,)).start()
             elif msg_type == 'Elect':
-                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start()
+                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start() """
             
 
 
