@@ -66,3 +66,7 @@ class Vote2(Vote):
             'sender': self.vote_sender,
             'qc_sender': self.qc_sender
         })
+    
+class Elect:
+    def __init__(self, sender):
+        self.sender = sender
