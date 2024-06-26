@@ -55,7 +55,7 @@ class Node:
         self.blockOutput = {}
         self.doneOutput = {}
         self.blockSend = {}
-        self.com=Com(self.port,self.peers)
+        self.com=Com(self.id,self.port,self.peers)
 
     def handleMsgLoop(self):
         msgCh = self.com.recv
