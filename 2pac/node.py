@@ -13,44 +13,46 @@ random.seed(1234)
 
 
 class Node:
-    def __init__(self, id : int, host : str, port : int, peers : list,leader : int, publickey, privatekey, isDelayed: bool):
-        self.id = id
+    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool):
+
+        # attributs propres au Node
+        self.id = id #de 1 à 4
         self.host = host
         self.port = port
         self.peers = peers
-        self.leader = leader
         self.publickey = publickey
         self.privatekey = privatekey
         self.delay = isDelayed           #A rajouter
         self.lock = threading.RLock()
         self.com=Com(self.id,self.port,self.peers,self.delay)
 
+        #attributs pour stocker les blocks et coinshare du Node
         self.block1 = []
         self.block2 = []
         self.coinshare = []
         
+        #attributs pour stocker les messages des autres Nodes
         self.blocks1 = {}
         self.qc1 = []
         self.blocks2 = {}
         self.qc2 = []
         self.elect = {}
-        self.leader = {}
-        self.chain = {}
+        self.leader = 0 #leader par défaut 0
+        self.chain = []
         
-        self.moveRound = 0
+        self.moveRound = 0 #à enlever / adapter pour views
 
+        #attributs propres au réseau de Nodes
         self.qccoin = random.randint(1, 5)
         self.nodeNum = 4
         self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)
 
+        #attributs de test de performances
         #self.evaluation = []
         #self.commitTime = []
-        
-
-        
+           
 
     def handleMsgLoop(self):
-        def handleMsgLoop(self):
         print("handleMsgLoop")
         msgCh = self.com.recv
         while True:
@@ -125,12 +127,12 @@ class Node:
     def storeBlock2Msg(self, block2: Block2): 
         self.pendingReady[block2.sender] = block2
 
-    def storeVote2Msg(self, done: Vote2):
+    def storeVote2Msg(self, vote2: Vote2):
         self.qc2.append(vote2.sender)
         #self.moveRound += 1 #toujours besoin de ça ?
 
     def storeElectMsg(self, elect: Elect):
-        self.elect[elect.Sender] = elect
+        self.elect[elect.sender] = elect
 
 
     def checkIfQuorum(self, msg):
@@ -144,6 +146,7 @@ class Node:
 
         elif type(msg) == Elect:
             if len(self.elect) >= self.quorumNum:
+                self.leader = self.qccoin
                 threading.Thread(target=self.broadcastLeader).start()
 
 
@@ -151,8 +154,7 @@ class Node:
     def tryToCommit(self):
         if self.leader and self.leader in self.qc2 and self.leader in self.blocks1: #leader dans qc2 = leader done avant
             leader_block = self.blocks1[self.leader]
-            leader_hash = leader_block.get_hash_as_string()
-            self.chain[leader_hash] = leader_block
+            self.chain.append(leader_block)
             #self.logger.info("commit the leader block", node=self.name, round=round, block_proposer=block.Sender)
             #commit_time = time.time_ns()
             #latency = commit_time - block.TimeStamp
@@ -161,8 +163,8 @@ class Node:
 
 
     def BroadcastLeader(self):
-        self.leader[1] = self.qccoin
         #broadcast
+        return
 
     """ def broadcast(self, msgType, msg):
         msgAsBytes = encode(msg)
