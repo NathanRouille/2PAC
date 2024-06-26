@@ -4,6 +4,7 @@ import json
 class Block:
     def __init__(self, sender):
         self.sender = sender
+        #on abstrait les tx en supposant que la pool est inépuisable et qu'on peut toujours remplir la data du block avec des tx
 
     def to_json(self):
         return json.dumps({
