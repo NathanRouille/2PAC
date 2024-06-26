@@ -24,7 +24,7 @@ def to_json(obj,node):
     if isinstance(obj, Block1):
         data = {
             'sender': obj.sender,
-            'Block_sender': obj.block
+            'Block': obj.block
         }
         return json.dumps({
             'type': 'Block1',

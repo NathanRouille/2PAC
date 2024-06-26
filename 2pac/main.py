@@ -13,7 +13,7 @@ ports = {
     "node3": list_ports[3],
 }
 
-block = Block2(0, "block",'lol')
+block = Block1(0, "block")
 
 vote = Vote2(0,1)
 
@@ -43,6 +43,6 @@ if __name__ == "__main__":
     threading.Thread(target=Nodes[1].handleMsgLoop).start()
     print("Node 1 started")
     broadcast(coms[2], to_json(block, Nodes[2]))
-    broadcast(coms[0], to_json(vote, Nodes[0]))
+    broadcast(coms[0], to_json(block, Nodes[0]))
 
                                                                                         
