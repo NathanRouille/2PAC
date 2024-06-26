@@ -15,8 +15,8 @@ def handlemessage(message):
     com.start()
     return com """
 
-def broadcast(com, message,delay = False):
-    com.broadcast_message(message, delay)
+def broadcast(com, message):
+    com.broadcast_message(message)
 
     
 def to_json(obj,node):
