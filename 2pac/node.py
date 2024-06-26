@@ -4,19 +4,25 @@ import time
 import random
 
 #Importer d'autres fichier
-from config import Config
-from network import NetworkTransport
 from sign import *
 from data_struct import Block, Chain,Done,Elect  
-from tools import encode
-from rcbc import *
+from tools import *
+from com import *
 
 random.seed(1234)
 
 
 class Node:
-    def __init__(self, conf: Config):
-        self.name = conf.name
+    def __init__(self, id : int, host : str, port : int, peers : list,leader : int, publickey, privatekey, isDelayed: bool):
+        self.id = id
+        self.host = host
+        self.port = port
+        self.peers = peers
+        self.leader = leader
+        self.publickey = publickey
+        self.privatekey = privatekey
+        self.delay = isDelayed           #A rajouter
+
         self.lock = threading.RLock()
         self.blocks = {}
         self.chain = {}
@@ -28,17 +34,15 @@ class Node:
         self.moveRound = 0
         self.nodeNum = 4
         self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)
-        self.clusterAddr = conf.clusterAddr
-        self.clusterPort = conf.clusterPort
-        self.clusterAddrWithPorts = conf.clusterAddrWithPorts
-        self.publicKeyMap = conf.publicKeyMap
-        self.privateKey = conf.privateKey
-        self.tsPublicKey = conf.tsPublicKey
-        self.tsPrivateKey = conf.tsPrivateKey
-        self.reflectedTypesMap = conf.reflectedTypesMap
+        
+        #self.publicKeyMap = conf.publicKeyMap
+        #self.privateKey = conf.privateKey
+        #self.tsPublicKey = conf.tsPublicKey
+        #self.tsPrivateKey = conf.tsPrivateKey
+        #self.reflectedTypesMap = conf.reflectedTypesMap
         self.evaluation = []
         self.commitTime = []
-        self.trans = NetworkTransport()
+        #self.trans = NetworkTransport()
         self.pendingBlocks = {}
         self.pendingVote = {}
         self.pendingReady = {}
@@ -56,7 +60,7 @@ class Node:
                 continue
             msgAsserted = msgWithSig['Msg']
             msg_type = type(msgAsserted).__name__
-            if not self.verifySigED25519(msgAsserted.Sender, msgWithSig['Msg'], msgWithSig['Sig']):
+            if not verify_signed():
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
             if msg_type == 'Block':
