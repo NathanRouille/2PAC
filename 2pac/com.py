@@ -1,11 +1,8 @@
 ##fichier de communication
 import socket
 import threading
-import time
-import json
 from data_struct import Node
-import base64
-
+from sign import *
 
 
 class Com:
@@ -63,12 +60,12 @@ class Com:
                 if not data:
                     break
                 message = data.decode('utf-8')
-                #print(type(json.loads(message)['data']))
-                #print(f"Pub: {find_publickey(message)}")
+                
 
-                self.show_message(message)
-                self.recv.append(message)
-                print(f'recv of {self.port} :: {self.recv}')
+                #self.show_message(message)
+                self.recv.append(json.loads(message))
+                print(verify_signed(self.recv[-1]["signature"]))
+                #print(f'recv of {self.port} :: {self.recv}')
             except Exception as e:
                 print(f"Error handling client: {e}")
                 break
@@ -95,6 +92,5 @@ class Com:
             thread.join()
         self.sock.close()
 
-def find_publickey(message):
-    return base64.b64decode(json.loads(message)["public_key"])
+
 
