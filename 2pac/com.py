@@ -1,7 +1,7 @@
 ##fichier de communication
 import socket
 import threading
-from data_struct import Node
+from node import Node
 from sign import *
 import queue
 import json
