@@ -13,12 +13,11 @@ random.seed(1234)
 
 
 class Node:
-    def __init__(self, id : int, host : str, port : int, peers : list,leader : int, publickey, privatekey, isDelayed: bool):
+    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool):
         self.id = id
         self.host = host
         self.port = port
         self.peers = peers
-        self.leader = leader
         self.publickey = publickey
         self.privatekey = privatekey
         self.delay = isDelayed           #A rajouter
@@ -51,7 +50,7 @@ class Node:
         self.com=Com(self.id,self.port,self.peers,self.delay)
 
     def handleMsgLoop(self):
-        print("handleMsgLoop")
+        print(f"handleMsgLoop de id= {self.id}")
         msgCh = self.com.recv
         while True:
             msgWithSig = msgCh.get()
@@ -59,39 +58,49 @@ class Node:
             msg_type = msgWithSig["type"]
             msg_publickey= msgWithSig["public_key"]
             msg_signature= msgWithSig["signature"]
-            print(f"Verify msg : {verify_signed(msg_signature)}")
+            """ print(f"Verify msg : {verify_signed(msg_signature)}") """
             if not verify_signed(msg_signature):
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
+            """ print(f"msg_type : {msg_type}")
+            print(f"msgAsserted : {msgAsserted}") """
             if msg_type == 'Block1':
-                msgAsserted=Block1(**msgAsserted)
-                print(type(msgAsserted))
-                #threading.Thread(target=self.handleBlock1Msg, args=(msgAsserted,)).start()
-            """ elif msg_type == 'Vote1':
-                threading.Thread(target=self.handleVote1Msg, args=(msgAsserted,)).start()
+                block1=Block1(msgAsserted["sender"],msgAsserted["Block"])
+                threading.Thread(target=self.handleBlock1Msg, args=(block1,)).start()
+            elif msg_type == 'Vote1':
+                vote1=Vote1(msgAsserted["sender"],msgAsserted["Block_sender"])
+                threading.Thread(target=self.handleVote1Msg, args=(vote1,)).start()
             elif msg_type == 'Block2':
-                threading.Thread(target=self.handleBlock2Msg, args=(msgAsserted,)).start()
+                print(f"msgAsserted : {msgAsserted}")
+                block2=Block2(msgAsserted["sender"],self.blocks1[msgAsserted["Block_sender"]],msgAsserted["qc"])
+                threading.Thread(target=self.handleBlock2Msg, args=(block2,)).start()
             elif msg_type == 'Vote2':
-                threading.Thread(target=self.handleVote2Msg, args=(msgAsserted,)).start()
+                vote2=Vote2(msgAsserted["sender"],msgAsserted["qc_sender"])
+                threading.Thread(target=self.handleVote2Msg, args=(vote2,)).start()
             elif msg_type == 'Elect':
-                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start() """
+                elect=Elect(msgAsserted["sender"])
+                threading.Thread(target=self.handleElectMsg, args=(elect,)).start()
             
 
 
     def handleBlock1Msg(self, block1: Block1):
+        print(f"handleBlock1Msg de id= {self.id}")
         if block1.sender not in self.blocks1:
             with self.lock:
                 self.storeBlock1Msg(block1)
-            threading.Thread(target=self.broadcastVote1, args=(block1.sender)).start()
+            threading.Thread(target=self.broadcastVote1, args=(block1.sender,)).start()
             self.tryToCommit()
+    
 
     def handleVote1Msg(self, vote1: Vote1):
-        if not self.broadcastedBlock2 and vote1.sender not in self.qc1 and vote1.Block_sender == self.id:
+        print(f"handleVote1Msg de id= {self.id}")
+        if not self.broadcastedBlock2 and vote1.sender not in self.qc1 and vote1.block_sender == self.id:
             with self.lock:
                 self.storeVote1Msg(vote1)
-            threading.Thread(target=self.checkIfQuorum, args=(vote1)).start()
+            threading.Thread(target=self.checkIfQuorum, args=(vote1,)).start()
 
     def handleBlock2Msg(self, block2: Block2):#vérifier le qc ?
+        print(f"handleBlock2Msg de id= {self.id}")
         if block2.sender not in self.blocks2:
             with self.lock:
                 self.storeBlock2Msg(block2)
@@ -123,7 +132,7 @@ class Node:
     def storeBlock2Msg(self, block2: Block2): 
         self.pendingReady[block2.sender] = block2
 
-    def storeVote2Msg(self, done: Vote2):
+    def storeVote2Msg(self, vote2: Vote2):
         self.qc2.append(vote2.sender)
         #self.moveRound += 1 #toujours besoin de ça ?
 
@@ -132,9 +141,11 @@ class Node:
 
 
     def checkIfQuorum(self, msg):
+        print(f"checkIfQuorum de id= {self.id}")
         if type(msg) == Vote1:
             if len(self.qc1) >= self.quorumNum:
-                threading.Thread(target=self.broadcastBlock2).start()
+                print(f"self.blocks1[msg.sender].block : {self.blocks1[msg.sender].block}")
+                threading.Thread(target=self.broadcastBlock2, args=(self.blocks1[msg.sender].sender,self.qc1)).start()
 
         elif type(msg) == Vote2:
             if len(self.qc2) >= self.quorumNum:
@@ -174,8 +185,9 @@ class Node:
             self.connPool.return_conn(netConn) """
 
     def broadcastBlock1(self, block):
+        print(f"broadcastBlock1 de id= {self.id}")
         message=Block1(self.id,block)
-        broadcast(self.com, to_json(message, self),delay = False)
+        broadcast(self.com, to_json(message, self))
         with self.lock:
             self.boradcastedBlock1 = True
 
@@ -184,14 +196,24 @@ class Node:
             self.broadcastedCoinShare = True
             
 
-    """ def broadcastVote(self, blockSender):
-        vote = Vote(voteSender=self.name, blockSender=blockSender)
-        self.broadcast('VoteTag', vote)
+    def broadcastVote1(self, blockSender):
+        print(f"broadcastVote1 de id= {self.id}")
+        message=Vote1(self.id,blockSender)
+        broadcast(self.com, to_json(message, self))
+        
 
-    def broadcastBlock2(self, hash, blockSender):
-        partialSig = Sign.sign_ts_partial(self.tsPrivateKey, hash)
+    def broadcastBlock2(self, block, qc):
+        print(f"broadcastBlock2 de id= {self.id}")
+        message=Block2(self.id,block,qc)
+        broadcast(self.com, to_json(message, self))
+        """ partialSig = Sign.sign_ts_partial(self.tsPrivateKey, hash)
         ready = Block2(readySender=self.name, blockSender=blockSender, hash=hash, partialSig=partialSig)
         self.broadcast('ReadyTag', ready) """
+
+    def broadcastVote1(self, blockSender):
+        print(f"broadcastVote1 de id= {self.id}")
+        message=Vote1(self.id,blockSender)
+        broadcast(self.com, to_json(message, self))
 
 
     def returnBlockChan(self):

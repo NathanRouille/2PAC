@@ -7,26 +7,30 @@ import threading
 
 list_ports = [random.randint(1000, 9000) for i in range(4)]
 ports = {
-    "node0": list_ports[0],
-    "node1": list_ports[1],
-    "node2": list_ports[2],
-    "node3": list_ports[3],
+    "node1": list_ports[0],
+    "node2": list_ports[1],
+    "node3": list_ports[2],
+    "node4": list_ports[3],
 }
 
-block = Block1(0, "block")
+block1 = Block1(1, "block")
+block2 = Block1(2, "block")
+block3 = Block1(3, "block")
+block4 = Block1(4, "block")
+
 
 vote = Vote2(0,1)
 
 def setup_nodes():
-    privatekey0, publickey0 = Sign.generate_keypair()
+    privatekey4, publickey4 = Sign.generate_keypair()
     privatekey1, publickey1 = Sign.generate_keypair()
     privatekey2, publickey2 = Sign.generate_keypair()
     privatekey3, publickey3 = Sign.generate_keypair()
-    node0 = Node(0,'localhost', ports["node0"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node3"])], 0, publickey0, privatekey0,True)
-    node1 = Node(1,'localhost', ports["node1"], [('localhost', ports["node0"]), ('localhost', ports["node2"]), ('localhost', ports["node3"])], 0, publickey1, privatekey1,False)
-    node2 = Node(2,'localhost', ports["node2"], [('localhost', ports["node0"]), ('localhost', ports["node1"]), ('localhost', ports["node3"])], 0, publickey2, privatekey2,False)
-    node3 = Node(3,'localhost', ports["node3"], [('localhost', ports["node0"]), ('localhost', ports["node1"]), ('localhost', ports["node2"])], 0, publickey3, privatekey3,False)
-    Nodes = [node0, node1, node2, node3]
+    node1 = Node(1,'localhost', ports["node1"], [('localhost', ports["node2"]), ('localhost', ports["node3"]), ('localhost', ports["node4"])], publickey1, privatekey1,False)
+    node2 = Node(2,'localhost', ports["node2"], [('localhost', ports["node1"]), ('localhost', ports["node3"]), ('localhost', ports["node4"])], publickey2, privatekey2,False)
+    node3 = Node(3,'localhost', ports["node3"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node4"])], publickey3, privatekey3,False)
+    node4 = Node(4,'localhost', ports["node4"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node3"])], publickey4, privatekey4,False)
+    Nodes = [node1, node2, node3, node4]
     return Nodes
 
 def start_coms(Nodes):
@@ -40,9 +44,15 @@ if __name__ == "__main__":
     Nodes = setup_nodes()
     coms = start_coms(Nodes)
     print("Nodes and coms setup")
+    threading.Thread(target=Nodes[0].handleMsgLoop).start()
     threading.Thread(target=Nodes[1].handleMsgLoop).start()
-    print("Node 1 started")
-    broadcast(coms[2], to_json(block, Nodes[2]))
-    broadcast(coms[0], to_json(block, Nodes[0]))
+    threading.Thread(target=Nodes[2].handleMsgLoop).start()
+    threading.Thread(target=Nodes[3].handleMsgLoop).start()
+
+    broadcast(coms[0], to_json(block1, Nodes[0]))
+    broadcast(coms[1], to_json(block2, Nodes[1]))
+    broadcast(coms[2], to_json(block3, Nodes[2]))
+    broadcast(coms[3], to_json(block4, Nodes[3]))
+
 
                                                                                         

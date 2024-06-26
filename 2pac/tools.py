@@ -46,7 +46,7 @@ def to_json(obj,node):
         })
     elif isinstance(obj, Vote1):
         data = {
-            'sender': obj.vote_sender,
+            'sender': obj.sender,
             'Block_sender': obj.block_sender
         }
         return json.dumps({
@@ -57,7 +57,7 @@ def to_json(obj,node):
         })
     elif isinstance(obj, Vote2):
         data = {
-            'sender': obj.vote_sender,
+            'sender': obj.sender,
             'QC_sender': obj.qc_sender
         }
         return json.dumps({
