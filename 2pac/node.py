@@ -34,6 +34,10 @@ class Node:
         self.moveRound = 0
         self.nodeNum = 4
         self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)
+        self.boradcastedBlock1 = False
+        self.broadcastedBlock2 = False
+        self.broadcastedCoinShare = False
+
         
         #self.publicKeyMap = conf.publicKeyMap
         #self.privateKey = conf.privateKey
@@ -46,8 +50,8 @@ class Node:
         self.pendingBlocks = {}
         self.pendingVote = {}
         self.pendingReady = {}
-        self.blockCh = queue.Queue()
-        self.doneCh = queue.Queue()
+        self.blockCh = "a changer "  #queue.Queue()
+        self.doneCh = "a changer "  #queue.Queue()
         self.blockOutput = {}
         self.doneOutput = {}
         self.blockSend = {}
@@ -83,13 +87,13 @@ class Node:
         with self.lock:
             self.storeBlockMsg(block)
         threading.Thread(target=self.broadcastVote, args=(block.sender)).start()
-        threading.Thread(target=self.checkIfQuorumVote, args=(block.round, block.sender)).start() #pq on test quorum ? On peut récupérer des signatures ?
+        threading.Thread(target=self.checkIfQuorum, args=(block.round, block.sender)).start() #pq on test quorum ? On peut récupérer des signatures ?
         self.tryToCommit()
 
     def handleVoteMsg(self, vote: Vote1): #vérifier signature et 1er vote de ce replica pour ce block
         with self.lock:
             self.storeVoteMsg(vote)
-        threading.Thread(target=self.checkIfQuorumVote, args=(vote.round, vote.blockSender)).start()
+        threading.Thread(target=self.checkIfQuorum, args=(vote)).start()
 
     def handleReadyMsg(self, ready: Block2):
         with self.lock:
@@ -132,48 +136,46 @@ class Node:
         self.elect[elect.Sender] = elect.PartialSig
 
 
+    def checkIfQuorum(self, msg):
+        if type(msg) == Vote1:
+            if len(self.pendingVote1) >= self.quorumNum and not self.broadcastedBlock2:
+                threading.Thread(target=self.broadcastBlock2).start()
 
-    def checkIfQuorumVote(self, vote):
-        if type(vote) == Vote1:
-        if self.pendingVote >= self.quorumNum:
-            #threading.Thread(target=self.broadcastBlock2).start()
-            #threading.Thread(target=self.broadcastCoinShare).start()
+        elif type(msg) == Vote2:
+            if len(self.pendingVote2) >= self.quorumNum and not self.broadcastedCoinShare:
+                threading.Thread(target=self.broadcastCoinShare).start()
 
-    def checkIfQuorumReady(self, ready: Block2):
-        with self.lock: #est-ce que c'est nécessaire de lock
-            if len(self.pendingReady) >= self.quorumNum and not self.doneOutput.get(ready.blockSender, False):
-                self.doneOutput[ready.blockSender] = True
-                partialSig = [parSig for parSig in self.pendingReady.values()]
-        doneMsg = Vote2(doneSender=self.name, blockSender=ready.blockSender, done=partialSig, hash=ready.hash, round=ready.round)
-        self.doneCh.put(doneMsg)
+        elif type(msg) == CoinShare:
+            if len(self.pendingCoinShare) >= self.quorumNum and not self.ElectedLeader:
+                threading.Thread(target=self.tryToElectLeader).start()
 
-
-
-
-    def broadcast(self, msgType, msg):
+    """ def broadcast(self, msgType, msg):
         msgAsBytes = encode(msg)
         sig = Sign.sign_ed25519(self.privateKey, msgAsBytes)
         for addrWithPort in self.clusterAddrWithPorts:
             netConn = self.connPool.get_conn(addrWithPort)
             conn.send_msg(netConn, msgType, msg, sig)
-            self.connPool.return_conn(netConn)
+            self.connPool.return_conn(netConn) """
 
-    def broadcastBlock(self, block):
-        self.broadcast('ProposalTag', block)
+    def broadcastBlock1(self, block):
+        message=Block1(self.id,block)
+        broadcast(self.com, to_json(message, self),delay = False)
         with self.lock:
-            self.blockSend[block.round] = True
+            self.boradcastedBlock1 = True
 
-    def broadcastVote(self, blockSender):
+
+            self.broadcastedBlock2 = True
+            self.broadcastedCoinShare = True
+            
+
+    """ def broadcastVote(self, blockSender):
         vote = Vote(voteSender=self.name, blockSender=blockSender)
         self.broadcast('VoteTag', vote)
 
     def broadcastReady(self, hash, blockSender):
         partialSig = Sign.sign_ts_partial(self.tsPrivateKey, hash)
         ready = Block2(readySender=self.name, blockSender=blockSender, hash=hash, partialSig=partialSig)
-        self.broadcast('ReadyTag', ready)
-
-
-
+        self.broadcast('ReadyTag', ready) """
 
 
     def returnBlockChan(self):
