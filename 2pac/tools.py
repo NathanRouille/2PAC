@@ -64,6 +64,17 @@ def to_json(obj,node):
             'signature': send_signed(data,node.privatekey),
             'public_key': base64_representation
         })
+    
+    elif isinstance(obj, Elect):
+        data = {
+            'sender': obj.sender,
+        }
+        return json.dumps({
+            'type': 'Elect',
+            'data': data,
+            'signature': send_signed(data,node.privatekey),
+            'public_key': base64_representation
+        })
     else :
         return json.dumps(obj.__dict__)
     

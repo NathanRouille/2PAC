@@ -29,6 +29,7 @@ class Node:
         #attributs pour stocker les blocks et coinshare du Node
         self.sentBlock1 = False
         self.sentBlock2 = False
+        self.sentCoinShare = False
 
         self.block1 = [] #ajouter Block1 à blocks1 plutôt
         self.block2 = [] #ajouter Block2 à blocks2 plutôt
@@ -124,12 +125,18 @@ class Node:
             self.tryToCommit() #est ce qu'on a besoin de commit là
 
     def handleVote2Msg(self, vote2: Vote2):
-        if not self.coinshare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:
+        print(f"handleVote2Msg de id= {self.id}")
+        """ if not self.coinshare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:
             with self.lock:
                 self.storeVote2Msg(vote2)
-            threading.Thread(target=self.checkIfQuorum, args=(vote2)).start()
+            threading.Thread(target=self.checkIfQuorum, args=(vote2,)).start()
             #threading.Thread(target=self.tryToNextRound).start() #vérifier si toujours besoin de ça
-            self.tryToCommit() #vérifier si toujours besoin de ça (leader dans qc2 ?)
+            self.tryToCommit() #vérifier si toujours besoin de ça (leader dans qc2 ?) """
+        
+        with self.lock:
+            if not self.sentCoinShare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:   #print(f"vote1 : {vote1} pour id= {self.id}")
+                self.storeVote2Msg(vote2)
+                self.checkIfQuorum(vote2)
 
     def handleElectMsg(self, elect: Elect):
         if not self.leader and elect.sender not in self.elect:
@@ -167,9 +174,15 @@ class Node:
                     threading.Thread(target=self.broadcastBlock2, args=(self.qc1,)).start()
 
         elif type(msg) == Vote2:
-            print("OKK")
-            if len(self.qc2) >= self.quorumNum:
-                threading.Thread(target=self.broadcastElect).start()
+            """ if len(self.qc2) >= self.quorumNum:
+                threading.Thread(target=self.broadcastElect).start() """
+
+            with self.lock:
+                if len(self.qc2) >= self.quorumNum:
+                    
+                    self.coinshare.append(True) ####A modifier###
+                    self.sentCoinShare = True
+                    threading.Thread(target=self.broadcastElect).start()
 
         elif type(msg) == Elect:
             if len(self.elect) >= self.quorumNum:
@@ -208,7 +221,7 @@ class Node:
         broadcast(self.com, to_json(block, self))
         
 
-            #self.coinshare.append(coinsharesig)
+        
             
 
     def broadcastVote1(self, blockSender):
@@ -230,6 +243,12 @@ class Node:
         print(f"broadcastVote2 de id= {self.id}")
         message=Vote2(self.id,qc_sender)
         broadcast(self.com, to_json(message, self))
+
+    def broadcastElect(self):
+        print(f"broadcastElect de id= {self.id}")
+        message=Elect(self.id)
+        broadcast(self.com, to_json(message, self))
+        
 
     
 
