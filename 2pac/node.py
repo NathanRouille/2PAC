@@ -56,15 +56,13 @@ class Node:
         self.blockOutput = {}
         self.doneOutput = {}
         self.blockSend = {}
-        self.com=Com(self.if,self.port,self.peers,self.delay)
+        self.com=Com(self.id,self.port,self.peers,self.delay)
 
     def handleMsgLoop(self):
         print("handleMsgLoop")
         msgCh = self.com.recv
         while True:
             msgWithSig = msgCh.get()
-            if not msgWithSig:
-                continue
             msgAsserted = msgWithSig["data"]
             msg_type = msgWithSig["type"]
             msg_publickey= msgWithSig["public_key"]
@@ -86,19 +84,19 @@ class Node:
 
 
 
-    def handleBlock1Msg(self, block: Block1):
+    def handleBlock1Msg(self, block1: Block1):#vérifier 1er block du sender
         with self.lock:
-            self.storeBlockMsg(block)
-        threading.Thread(target=self.broadcastVote1, args=(block.sender)).start()
+            self.storeBlock1Msg(block1)
+        threading.Thread(target=self.broadcastVote1, args=(block1.sender)).start()
         self.tryToCommit()
 
-    def handleVote1Msg(self, vote1: Vote1): #vérifier signature et 1er vote de ce replica pour ce block
-        if not self.broadcastedBlock2 and vote1.blockSender not in self.pendingVote:
+    def handleVote1Msg(self, vote1: Vote1):
+        if not self.broadcastedBlock2 and vote1.sender not in self.qc1 and vote1.Block_sender == self.id:
             with self.lock:
                 self.storeVote1Msg(vote1)
             threading.Thread(target=self.checkIfQuorum, args=(vote1)).start()
 
-    def handleBlock2Msg(self, ready: Block2):
+    def handleBlock2Msg(self, ready: Block2):#vérifier le qc ?
         with self.lock:
             self.storeBlock2Msg(ready)
         threading.Thread(target=self.broadcastVote2, args=(ready.sender)).start()
@@ -124,7 +122,7 @@ class Node:
         self.blocks[block1.Sender] = block1
 
     def storeVote1Msg(self, vote1: Vote1):
-        self.qc1.append(vote1)
+        self.qc1.append(vote1.sender)
 
     def storeBlock2Msg(self, ready: Block2): #readySender peut être différent de ready.blockSender ? Sinon enlever if et faire dict 1 dimension
         if ready.blockSender not in self.pendingReady:
