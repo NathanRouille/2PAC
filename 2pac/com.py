@@ -8,7 +8,7 @@ import time
 
 
 class Com:
-    def __init__(self,id = None, port = None, peers = None):
+    def __init__(self,id = None, port = None, peers = None, delay = False):
         #print("Node class initialized")
         self.id = id
         self.host = 'localhost'
@@ -18,6 +18,7 @@ class Com:
         self.sock.bind((self.host, self.port))
         self.threads = []
         self.recv = queue.Queue()
+        self.delay = delay
 
     def start(self):
         #print(f"Node started at {self.host}:{self.port}")
@@ -88,18 +89,19 @@ class Com:
         except ConnectionRefusedError:
             print(f"Unable to send message to peer {peer}")
 
-    def wait_and_send(self,duration,message):
+    def wait(self,message, duration):
+        print(f'delay applied on {self.id}...')
         time.sleep(duration)
         for peer in self.peers:
                 self.send_message(message, peer)
 
-    def broadcast_message(self, message,delay = False):
-        if not delay:
+    def broadcast_message(self, message):
+        if not self.delay:
             for peer in self.peers:
                 self.send_message(message, peer)
         else:
-            self.wait_and_send(5,message)
-    
+            delating_thread = threading.Thread(target=self.wait, args=(message,5,))
+            delating_thread.start()
 
 
     def stop(self):
