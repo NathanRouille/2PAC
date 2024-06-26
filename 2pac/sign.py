@@ -22,18 +22,18 @@ class Sign:
         try:
             # Convertir la clé publique de hex en bytes
             public_key_bytes = bytes.fromhex(public_key_hex)
-            print("Public Key Bytes:", public_key_bytes)
+            #print("Public Key Bytes:", public_key_bytes)
             verify_key = signing.VerifyKey(public_key_bytes)
             
             # Convertir le message signé de hex en bytes
             signature_bytes = bytes.fromhex(signed_message_dict['signature'])
-            print("Signature Bytes:", signature_bytes)
+            #print("Signature Bytes:", signature_bytes)
             message_bytes = bytes.fromhex(signed_message_dict['message'])
-            print("Message Bytes:", message_bytes)
+            #print("Message Bytes:", message_bytes)
             
             # Recréer l'objet SignedMessage en combinant signature et message
             signed_message_combined = signature_bytes + message_bytes
-            print("Signed Message Combined:", signed_message_combined)
+            #print("Signed Message Combined:", signed_message_combined)
             
             # Vérifier la signature
             verify_key.verify(signed_message_combined)

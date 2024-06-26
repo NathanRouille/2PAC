@@ -20,7 +20,6 @@ def setup_nodes():
     privatekey1, publickey1 = Sign.generate_keypair()
     privatekey2, publickey2 = Sign.generate_keypair()
     privatekey3, publickey3 = Sign.generate_keypair()
-    print(publickey0)
     node0 = Node(0,'localhost', ports["node0"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node3"])], 0, publickey0, privatekey0)
     node1 = Node(1,'localhost', ports["node1"], [('localhost', ports["node0"]), ('localhost', ports["node2"]), ('localhost', ports["node3"])], 0, publickey1, privatekey1)
     node2 = Node(2,'localhost', ports["node2"], [('localhost', ports["node0"]), ('localhost', ports["node1"]), ('localhost', ports["node3"])], 0, publickey2, privatekey2)
