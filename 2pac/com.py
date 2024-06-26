@@ -67,7 +67,7 @@ class Com:
                 #print(f"Pub: {find_publickey(message)}")
 
                 self.show_message(message)
-                self.recv.append(message)
+                self.recv.append(json.loads(message))
                 print(f'recv of {self.port} :: {self.recv}')
             except Exception as e:
                 print(f"Error handling client: {e}")
