@@ -5,6 +5,8 @@ from data_struct import Node
 from sign import *
 import queue
 import json
+import time
+
 
 class Com:
     def __init__(self,node: Node , host = None, port = None, peers = None):
@@ -83,9 +85,22 @@ class Com:
         except ConnectionRefusedError:
             print(f"Unable to send message to peer {peer}")
 
-    def broadcast_message(self, message):
+    def wait_and_send(self,duration,message):
+        time.sleep(duration)
         for peer in self.peers:
-            self.send_message(message, peer)
+                self.send_message(message, peer)
+
+    def broadcast_message(self, message,delay = False):
+        if not delay:
+            for peer in self.peers:
+                self.send_message(message, peer)
+        else:
+            self.wait_and_send(5,message)
+    
+
+
+        
+
 
     def stop(self):
         #print("Stopping node...")
