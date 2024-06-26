@@ -11,9 +11,9 @@ ports = {
     "node3": list_ports[3],
 }
 
-block = Block1(0, "block")
+block = Block2(0, "block",'lol')
 
-vote1 = Vote1(0,1)
+vote1 = Vote2(0,1)
 
 def setup_nodes():
     privatekey0, publickey0 = Sign.generate_keypair()
@@ -38,6 +38,6 @@ if __name__ == "__main__":
     Nodes = setup_nodes()
     coms = start_coms(Nodes)
     print("Nodes and coms setup")
-    broadcast(coms[0], to_json(vote1, Nodes[0]))
+    broadcast(coms[0], to_json(block, Nodes[0]))
 
                                                                                         

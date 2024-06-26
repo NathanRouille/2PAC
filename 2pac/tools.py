@@ -23,8 +23,8 @@ def to_json(obj,node):
     base64_representation = base64.b64encode(node.publickey.encode()).decode('utf-8')
     if isinstance(obj, Block1):
         data = {
-            'sender': obj.vote_sender,
-            'Block_sender': obj.block_sender
+            'sender': obj.sender,
+            'Block_sender': obj.block
         }
         return json.dumps({
             'type': 'Block1',
@@ -34,8 +34,8 @@ def to_json(obj,node):
         })
     elif isinstance(obj, Block2):
         data = {
-            'sender': obj.vote_sender,
-            'Block_sender': obj.block_sender,  
+            'sender': obj.sender,
+            'Block_sender': obj.block,  
             'qc': obj.qc
         }
         return json.dumps({
