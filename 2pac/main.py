@@ -13,10 +13,10 @@ ports = {
     "node4": list_ports[3],
 }
 
-block1 = Block1(1, "block")
-block2 = Block1(2, "block")
-block3 = Block1(3, "block")
-block4 = Block1(4, "block")
+block1 = Block1(1, "tx")
+block2 = Block1(2, "tx")
+block3 = Block1(3, "tx")
+block4 = Block1(4, "tx")
 
 
 vote = Vote2(0,1)
@@ -49,10 +49,24 @@ if __name__ == "__main__":
     threading.Thread(target=Nodes[2].handleMsgLoop).start()
     threading.Thread(target=Nodes[3].handleMsgLoop).start()
 
+    """
+    Nodes[0].broadcastBlock1(block1)
+    Nodes[1].broadcastBlock1(block2)
+    Nodes[2].broadcastBlock1(block3)
+    Nodes[3].broadcastBlock1(block4)
+    threading.Thread(target=Nodes[0].broadcastBlock1, args=(block1,)).start()
+    threading.Thread(target=Nodes[1].broadcastBlock1, args=(block2,)).start()
+    threading.Thread(target=Nodes[2].broadcastBlock1, args=(block3,)).start()
+    threading.Thread(target=Nodes[3].broadcastBlock1, args=(block4,)).start() """
+    
     broadcast(coms[0], to_json(block1, Nodes[0]))
+    Nodes[0].block1.append(block1)
     broadcast(coms[1], to_json(block2, Nodes[1]))
+    Nodes[1].block1.append(block2)
     broadcast(coms[2], to_json(block3, Nodes[2]))
+    Nodes[2].block1.append(block3)
     broadcast(coms[3], to_json(block4, Nodes[3]))
+    Nodes[3].block1.append(block4) 
 
 
                                                                                         
