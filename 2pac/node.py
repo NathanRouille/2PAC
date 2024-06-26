@@ -107,7 +107,7 @@ class Node:
         if block2.sender not in self.blocks2:
             with self.lock:
                 self.storeBlock2Msg(block2)
-            threading.Thread(target=self.broadcastVote2, args=(block2.sender)).start()
+            threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
             self.tryToCommit() #est ce qu'on a besoin de commit là
 
     def handleVote2Msg(self, vote2: Vote2):
@@ -209,9 +209,9 @@ class Node:
         ready = Block2(readySender=self.name, blockSender=blockSender, hash=hash, partialSig=partialSig)
         self.broadcast('ReadyTag', ready) """
 
-    def broadcastVote1(self, blockSender):
-        print(f"broadcastVote1 de id= {self.id}")
-        message=Vote1(self.id,blockSender)
+    def broadcastVote2(self, qc_sender):
+        print(f"broadcastVote2 de id= {self.id}")
+        message=Vote2(self.id,qc_sender)
         broadcast(self.com, to_json(message, self))
 
     
