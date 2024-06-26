@@ -113,3 +113,13 @@ fn new_node(conf: &config::Config) -> Node {
 
     return n;
 }
+
+fn reflected_types_map() -> HashMap<u8, Type> {
+    let mut reflected_types_map = HashMap::new();
+    reflected_types_map.insert(1, Type::Block);
+    reflected_types_map.insert(2, Type::Vote);
+    reflected_types_map.insert(3, Type::Ready);
+    reflected_types_map.insert(4, Type::Done);
+    reflected_types_map.insert(5, Type::Elect);
+    return reflected_types_map;
+}
