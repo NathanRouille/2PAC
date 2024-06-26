@@ -77,3 +77,7 @@ impl Node {
         Ok(())
     }
 }
+
+fn main() {
+    println!("Hello, world!");
+}
