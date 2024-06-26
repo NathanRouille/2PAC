@@ -217,12 +217,11 @@ class Node:
         broadcast(self.com, to_json(message, self))
         
 
-    def broadcastBlock2(self, block2, qc):
     def broadcastBlock2(self, qc):
         print(f"broadcastBlock2 de id= {self.id}")
         message=Block2(self.id,qc)
-        message=Block2(self.id,qc)
         broadcast(self.com, to_json(message, self))
+        
         """ partialSig = Sign.sign_ts_partial(self.tsPrivateKey, hash)
         ready = Block2(readySender=self.name, blockSender=blockSender, hash=hash, partialSig=partialSig)
         self.broadcast('ReadyTag', ready) """
