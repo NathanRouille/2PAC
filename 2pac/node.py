@@ -63,7 +63,7 @@ class Node:
         msgCh = self.com.recv
         while True:
             msgWithSig = msgCh.get()
-            msgAsserted = msgWithSig["data"]
+            '''msgAsserted = msgWithSig["data"]
             msg_type = msgWithSig["type"]
             msg_publickey= msgWithSig["public_key"]
             msg_signature= msgWithSig["signature"]
@@ -79,7 +79,7 @@ class Node:
             elif msg_type == 'Vote2':
                 threading.Thread(target=self.handleVote2Msg, args=(msgAsserted,)).start()
             elif msg_type == 'Elect':
-                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start()
+                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start()'''
             
 
 
