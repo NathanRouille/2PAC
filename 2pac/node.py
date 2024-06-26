@@ -60,12 +60,14 @@ class Node:
             msg_publickey= msgWithSig["public_key"]
             msg_signature= msgWithSig["signature"]
             print(f"Verify msg : {verify_signed(msg_signature)}")
-            """ if not verify_signed(msg_signature):
+            if not verify_signed(msg_signature):
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
-                continue """
-            """ if msg_type == 'Block1':
-                threading.Thread(target=self.handleBlock1Msg, args=(msgAsserted,)).start()
-            elif msg_type == 'Vote1':
+                continue
+            if msg_type == 'Block1':
+                msgAsserted=Block1(**msgAsserted)
+                print(type(msgAsserted))
+                #threading.Thread(target=self.handleBlock1Msg, args=(msgAsserted,)).start()
+            """ elif msg_type == 'Vote1':
                 threading.Thread(target=self.handleVote1Msg, args=(msgAsserted,)).start()
             elif msg_type == 'Block2':
                 threading.Thread(target=self.handleBlock2Msg, args=(msgAsserted,)).start()
