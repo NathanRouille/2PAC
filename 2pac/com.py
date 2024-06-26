@@ -62,7 +62,7 @@ class Com:
                 if not data:
                     break
                 message = data.decode('utf-8')
-                print(type(json.loads(message)['data']))
+                #print(type(json.loads(message)['data']))
                 #print(f"Pub: {find_publickey(message)}")
 
                 self.show_message(message)
