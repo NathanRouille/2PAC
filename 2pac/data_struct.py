@@ -4,6 +4,7 @@ import json
 class Block:
     def __init__(self, sender):
         self.sender = sender
+        #on abstrait les tx en supposant que la pool est inépuisable et qu'on peut toujours remplir la data du block avec des tx
 
     def to_json(self):
         return json.dumps({
@@ -11,27 +12,23 @@ class Block:
         })
 
 class Block1(Block):
-    def __init__(self, sender, block):
+    def __init__(self, sender):
         super().__init__(sender)
-        self.block = block
 
     def to_json(self):
         return json.dumps({
-            'sender': self.sender,
-            'Block': self.block
+            'sender': self.sender
         })
 
 
 class Block2(Block):
-    def __init__(self, sender, block, qc):
+    def __init__(self, sender, qc):
         super().__init__(sender)
-        self.block = block
         self.qc = qc
     
     def to_json(self):
         return json.dumps({
             'sender': self.sender,
-            'Block': self.block,
             'QC': self.qc
         })
 
