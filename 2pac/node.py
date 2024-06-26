@@ -22,35 +22,35 @@ class Node:
         self.publickey = publickey
         self.privatekey = privatekey
         self.delay = isDelayed           #A rajouter
-
         self.lock = threading.RLock()
+        self.com=Com(self.id,self.port,self.peers,self.delay)
+
+        self.block1 = []
+        self.block2 = []
+        self.coinshare = []
+        
         self.blocks1 = {}
+        self.qc1 = []
         self.blocks2 = {}
-        self.chain = {}
-        self.leader = {}
+        self.qc2 = []
         self.elect = {}
-        self.qccoin = random.randint(1, 5)
+        self.leader = {}
+        self.chain = {}
+        
         self.moveRound = 0
+
+        self.qccoin = random.randint(1, 5)
         self.nodeNum = 4
         self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)
-        self.boradcastedBlock1 = False
-        self.broadcastedBlock2 = False
-        self.broadcastedCoinShare = False
 
         #self.evaluation = []
         #self.commitTime = []
-        self.pendingBlocks = {}
-        self.qc1 = []
-        self.qc2 = []
-        self.pendingReady = {}
-        self.blockCh = "a changer "  #queue.Queue()
-        self.doneCh = "a changer "  #queue.Queue()
-        self.blockOutput = {}
-        self.doneOutput = {}
-        self.blockSend = {}
-        self.com=Com(self.id,self.port,self.peers,self.delay)
+        
+
+        
 
     def handleMsgLoop(self):
+        def handleMsgLoop(self):
         print("handleMsgLoop")
         msgCh = self.com.recv
         while True:
@@ -63,9 +63,11 @@ class Node:
             if not verify_signed(msg_signature):
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
+            print(f"msg_type : {msg_type}")
+            print(f"msgAsserted : {msgAsserted}")
             if msg_type == 'Block1':
-                msgAsserted=Block1(**msgAsserted)
-                print(type(msgAsserted))
+                block1=Block1(msgAsserted["sender"],msgAsserted["Block"])
+                print(type(block1))
                 #threading.Thread(target=self.handleBlock1Msg, args=(msgAsserted,)).start()
             """ elif msg_type == 'Vote1':
                 threading.Thread(target=self.handleVote1Msg, args=(msgAsserted,)).start()
@@ -86,7 +88,7 @@ class Node:
             self.tryToCommit()
 
     def handleVote1Msg(self, vote1: Vote1):
-        if not self.broadcastedBlock2 and vote1.sender not in self.qc1 and vote1.Block_sender == self.id:
+        if not self.block2 and vote1.sender not in self.qc1 and vote1.Block_sender == self.id:
             with self.lock:
                 self.storeVote1Msg(vote1)
             threading.Thread(target=self.checkIfQuorum, args=(vote1)).start()
@@ -99,7 +101,7 @@ class Node:
             self.tryToCommit() #est ce qu'on a besoin de commit là
 
     def handleVote2Msg(self, vote2: Vote2):
-        if not self.broadcastedCoinShare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:
+        if not self.coinshare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:
             with self.lock:
                 self.storeVote2Msg(vote2)
             threading.Thread(target=self.checkIfQuorum, args=(vote2)).start()
@@ -144,10 +146,7 @@ class Node:
             if len(self.elect) >= self.quorumNum:
                 threading.Thread(target=self.broadcastLeader).start()
 
-    def tryToNextRound(self):
-        with self.lock:
-            if self.moveRound >= self.quorumNum:
-                self.round += 1
+
 
     def tryToCommit(self):
         if self.leader and self.leader in self.qc2 and self.leader in self.blocks1: #leader dans qc2 = leader done avant
@@ -163,7 +162,7 @@ class Node:
 
     def BroadcastLeader(self):
         self.leader[1] = self.qccoin
-        broadcast
+        #broadcast
 
     """ def broadcast(self, msgType, msg):
         msgAsBytes = encode(msg)
@@ -177,11 +176,10 @@ class Node:
         message=Block1(self.id,block)
         broadcast(self.com, to_json(message, self),delay = False)
         with self.lock:
-            self.boradcastedBlock1 = True
+            self.block1.append(block)
 
-
-            self.broadcastedBlock2 = True
-            self.broadcastedCoinShare = True
+            self.block2.append(block)
+            self.coinshare.append(coinsharesig)
             
 
     """ def broadcastVote(self, blockSender):
@@ -223,6 +221,11 @@ class Node:
         self.logger.info("the average", latency=latency, throughput=throughPut)
         self.logger.info("the total commit", block_number=blockNum, time=pastTime)'''
 
+
+    def tryToNextRound(self):
+        with self.lock:
+            if self.moveRound >= self.quorumNum:
+                self.round += 1
 
     def NewBlock(self):
         timestamp = time.time_ns()
