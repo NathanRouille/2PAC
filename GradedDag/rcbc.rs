@@ -292,3 +292,4 @@ impl CBC {
             _ => panic!("Unknown message tag: {}", tag),
         }
     }
+}
