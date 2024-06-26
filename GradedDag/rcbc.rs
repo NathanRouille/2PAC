@@ -190,7 +190,7 @@ impl CBC {
             }
         }
     }
-
+    
     pub fn checkIfQuorumReady(&self, ready: &Ready) {
         let mut pending_ready = self.pendingReady.write().unwrap();
         let readies = pending_ready.get(&ready.round)
@@ -239,5 +239,39 @@ impl CBC {
             self.blockCh.send(block.clone()).unwrap();
         }
     }
-
+    // Cette fonction permet de diffuser un message à tous les membres du cluster.
+    // Elle prend en paramètre un tag qui identifie le type de message et un message à sérialiser.
+    // Elle renvoie un résultat indiquant si la diffusion a réussi ou s'il y a eu des erreurs.
+    pub fn broadcast(&self, tag: u8, msg: &dyn Serialize) -> Result<(), String> {
+        let msg_bytes = bincode::serialize(msg).map_err(|err| err.to_string())?;
+        let mut errors = Vec::new();
+        for (addr, port) in &self.clusterAddrWithPorts {
+            let addr = format!("{}:{}", addr, port);
+            let conn = self.connPool.getConn(&addr).map_err(|err| err.to_string())?;
+            if let Err(err) = conn.send(tag, &msg_bytes) {
+                errors.push(err.to_string());
+            }
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors.join(", "))
+        }
+    }
+    pub fn broadcast(&self, tag: u8, msg: &dyn Serialize) -> Result<(), String> {
+        let msg_bytes = bincode::serialize(msg).map_err(|err| err.to_string())?;
+        let mut errors = Vec::new();
+        for (addr, port) in &self.clusterAddrWithPorts {
+            let addr = format!("{}:{}", addr, port);
+            let conn = self.connPool.getConn(&addr).map_err(|err| err.to_string())?;
+            if let Err(err) = conn.send(tag, &msg_bytes) {
+                errors.push(err.to_string());
+            }
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors.join(", "))
+        }
+    }
 
