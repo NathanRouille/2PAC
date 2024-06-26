@@ -9,7 +9,7 @@ from data_struct import *
 from tools import *
 from com import Com
 
-random.seed(1234)
+random.seed(7777)
 
 
 class Node:
@@ -88,13 +88,18 @@ class Node:
                 threading.Thread(target=self.handleBlock2Msg, args=(block2,)).start()
             
             elif msg_type == 'Vote2':
-                print(f"msgAsserted de Vote2 : {msgAsserted} pour id= {self.id}")
+                #print(f"msgAsserted de Vote2 : {msgAsserted} pour id= {self.id}")
                 vote2=Vote2(msgAsserted["sender"],msgAsserted["QC_sender"])
                 threading.Thread(target=self.handleVote2Msg, args=(vote2,)).start()
-            """
+            
             elif msg_type == 'Elect':
+                #print(f"msgAsserted de Elect : {msgAsserted} pour id= {self.id}")
                 elect=Elect(msgAsserted["sender"])
-                threading.Thread(target=self.handleElectMsg, args=(elect,)).start() """
+                threading.Thread(target=self.handleElectMsg, args=(elect,)).start()
+            elif msg_type == 'Leader':
+                print(f"msgAsserted de Leader : {msgAsserted} pour id= {self.id}")
+                leader=Leader(msgAsserted["sender"],msgAsserted["id_leader"])
+                threading.Thread(target=self.handleLeaderMsg, args=(leader,)).start()
             
 
 
@@ -139,10 +144,20 @@ class Node:
                 self.checkIfQuorum(vote2)
 
     def handleElectMsg(self, elect: Elect):
-        if not self.leader and elect.sender not in self.elect:
-            with self.lock:
+        print(f"handleElectMsg de id= {self.id}")
+        with self.lock:
+            if not self.leader and elect.sender not in self.elect:
                 self.storeElectMsg(elect)
-            threading.Thread(target=self.checkIfQuorum, args=(elect)).start()
+                self.checkIfQuorum(elect)
+    
+    def handleLeaderMsg(self, leader: Leader):
+        print(f"handleLeaderMsg de id= {self.id}")
+        with self.lock:
+            if not self.leader:
+                print(f"Commit pour id= {self.id}")
+                self.leader = leader.id_leader
+                self.tryToCommit()
+    
 
 
 
@@ -182,19 +197,22 @@ class Node:
                     
                     self.coinshare.append(True) ####A modifier###
                     self.sentCoinShare = True
-                    threading.Thread(target=self.broadcastElect).start()
+                    threading.Thread(target=self.broadcastElect, args=()).start()
 
         elif type(msg) == Elect:
-            if len(self.elect) >= self.quorumNum:
-                self.leader = self.qccoin
-                threading.Thread(target=self.broadcastLeader).start()
+            with self.lock:
+                if len(self.elect) >= self.quorumNum:
+                    self.leader = self.qccoin
+                    threading.Thread(target=self.broadcastLeader, args=()).start()
 
 
 
     def tryToCommit(self):
+        print(f"tryToCommit de id= {self.id}")
         if self.leader and self.leader in self.qc2 and self.leader in self.blocks1: #leader dans qc2 = leader done avant
             leader_block = self.blocks1[self.leader]
             self.chain.append(leader_block)
+            print(f"Chain {self.chain[0].sender} pour id= {self.id}")
             #self.logger.info("commit the leader block", node=self.name, round=round, block_proposer=block.Sender)
             #commit_time = time.time_ns()
             #latency = commit_time - block.TimeStamp
@@ -202,9 +220,11 @@ class Node:
             #self.commitTime.append(commit_time)
 
 
-    def BroadcastLeader(self):
-        #broadcast
-        return
+    def broadcastLeader(self):
+        print(f"broadcastLeader de id= {self.id}")
+        print(f"Le Leader est {self.leader} pour id= {self.id}")
+        message=Leader(self.id,self.leader)
+        broadcast(self.com, to_json(message, self))
 
     """ def broadcast(self, msgType, msg):
         msgAsBytes = encode(msg)

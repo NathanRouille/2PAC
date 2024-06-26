@@ -68,3 +68,9 @@ class Elect:
     def __init__(self, sender):
         self.sender = sender
         #on abstrait data = qcCoinshare
+
+class Leader:
+    def __init__(self, sender,id_leader):
+        self.sender = sender
+        self.id_leader = id_leader
+        #on pouurrat rajouter block1 qc1 et qc2 du leader si on les a 
