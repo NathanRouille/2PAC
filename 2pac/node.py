@@ -48,23 +48,22 @@ class Node:
         self.commitTime = []
         #self.trans = NetworkTransport()
         self.pendingBlocks = {}
-        self.pendingVote = {}
+        self.qc1 = []
+        self.qc2 = []
         self.pendingReady = {}
         self.blockCh = "a changer "  #queue.Queue()
         self.doneCh = "a changer "  #queue.Queue()
         self.blockOutput = {}
         self.doneOutput = {}
         self.blockSend = {}
-        self.com=Com(self.id,self.port,self.peers)
+        self.com=Com(self.if,self.port,self.peers,self.delay)
 
     def handleMsgLoop(self):
+        print("handleMsgLoop")
         msgCh = self.com.recv
-        print(msgCh)
         while True:
-            print("ok2")
             msgWithSig = msgCh.get()
-            print(f"Message sign: {msgWithSig}")
-            """ if not msgWithSig:
+            if not msgWithSig:
                 continue
             msgAsserted = msgWithSig["data"]
             msg_type = msgWithSig["type"]
@@ -74,64 +73,65 @@ class Node:
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
             if msg_type == 'Block1':
-                threading.Thread(target=self.handleBlockMsg, args=(msgAsserted,)).start()
+                threading.Thread(target=self.handleBlock1Msg, args=(msgAsserted,)).start()
             elif msg_type == 'Vote1':
-                threading.Thread(target=self.handleVoteMsg, args=(msgAsserted,)).start()
+                threading.Thread(target=self.handleVote1Msg, args=(msgAsserted,)).start()
             elif msg_type == 'Block2':
-                threading.Thread(target=self.handleReadyMsg, args=(msgAsserted,)).start()
+                threading.Thread(target=self.handleBlock2Msg, args=(msgAsserted,)).start()
             elif msg_type == 'Vote2':
-                threading.Thread(target=self.handleDoneMsg, args=(msgAsserted,)).start()
+                threading.Thread(target=self.handleVote2Msg, args=(msgAsserted,)).start()
             elif msg_type == 'Elect':
-                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start() """
+                threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start()
             
 
 
 
-    def handleBlockMsg(self, block: Block1):
+    def handleBlock1Msg(self, block: Block1):
         with self.lock:
             self.storeBlockMsg(block)
-        threading.Thread(target=self.broadcastVote, args=(block.sender)).start()
-        threading.Thread(target=self.checkIfQuorum, args=(block.round, block.sender)).start() #pq on test quorum ? On peut récupérer des signatures ?
+        threading.Thread(target=self.broadcastVote1, args=(block.sender)).start()
         self.tryToCommit()
 
-    def handleVoteMsg(self, vote: Vote1): #vérifier signature et 1er vote de ce replica pour ce block
-        with self.lock:
-            self.storeVoteMsg(vote)
-        threading.Thread(target=self.checkIfQuorum, args=(vote)).start()
+    def handleVote1Msg(self, vote1: Vote1): #vérifier signature et 1er vote de ce replica pour ce block
+        if not self.broadcastedBlock2 and vote1.blockSender not in self.pendingVote:
+            with self.lock:
+                self.storeVote1Msg(vote1)
+            threading.Thread(target=self.checkIfQuorum, args=(vote1)).start()
 
-    def handleReadyMsg(self, ready: Block2):
+    def handleBlock2Msg(self, ready: Block2):
         with self.lock:
-            self.storeReadyMsg(ready)
-        threading.Thread(target=self.checkIfQuorumReady, args=(ready)).start()
-
-    def handleDoneMsg(self, done: Vote2):
-        with self.lock:
-            self.storeDoneMsg(done)
-        threading.Thread(target=self.tryToNextRound).start()
+            self.storeBlock2Msg(ready)
+        threading.Thread(target=self.broadcastVote2, args=(ready.sender)).start()
         self.tryToCommit()
+
+    def handleVote2Msg(self, vote2: Vote2):
+        if not self.broadcastedCoinShare:
+            with self.lock:
+                self.storeVote2Msg(vote2)
+            threading.Thread(target=self.checkIfQuorum, args=(vote2)).start()
+            #threading.Thread(target=self.tryToNextRound).start() #vérifier si toujours besoin de ça
+            #self.tryToCommit() #vérifier si toujours besoin de ça
 
     def handleElectMsg(self, elect: Elect):
-        with self.lock:
-            self.storeElectMsg(elect)
-            self.tryToElectLeader(elect.Round)
+        if not self.ElectedLeader:
+            with self.lock:
+                self.storeElectMsg(elect)
+            threading.Thread(target=self.checkIfQuorum, args=(elect)).start()
 
 
 
+    def storeBlock1Msg(self, block1: Block1):
+        self.blocks[block1.Sender] = block1
 
-    def storeBlockMsg(self, block: Block1):
-        self.blocks[block.Sender] = block
+    def storeVote1Msg(self, vote1: Vote1):
+        self.qc1.append(vote1)
 
-    def storeVoteMsg(self, vote: Vote1): #si déjà envoyé block hauteur 2 ne rien faire, vérifier signature vote
-        if vote.blockSender not in self.pendingVote:
-            self.pendingVote[vote.blockSender] = 0
-        self.pendingVote[vote.blockSender] += 1
-
-    def storeReadyMsg(self, ready: Block2): #readySender peut être différent de ready.blockSender ? Sinon enlever if et faire dict 1 dimension
+    def storeBlock2Msg(self, ready: Block2): #readySender peut être différent de ready.blockSender ? Sinon enlever if et faire dict 1 dimension
         if ready.blockSender not in self.pendingReady:
             self.pendingReady[ready.blockSender] = {}
         self.pendingReady[ready.blockSender][ready.readySender] = ready.partialSig
 
-    def storeDoneMsg(self, done: Vote2):
+    def storeVote2Msg(self, done: Vote2):
         if done.BlockSender not in self.done:
             self.done[done.BlockSender] = done
             self.moveRound += 1
@@ -140,17 +140,18 @@ class Node:
         self.elect[elect.Sender] = elect.PartialSig
 
 
+
     def checkIfQuorum(self, msg):
         if type(msg) == Vote1:
-            if len(self.pendingVote1) >= self.quorumNum and not self.broadcastedBlock2:
+            if len(self.qc1) >= self.quorumNum:
                 threading.Thread(target=self.broadcastBlock2).start()
 
         elif type(msg) == Vote2:
-            if len(self.pendingVote2) >= self.quorumNum and not self.broadcastedCoinShare:
+            if len(self.qc2) >= self.quorumNum:
                 threading.Thread(target=self.broadcastCoinShare).start()
 
         elif type(msg) == CoinShare:
-            if len(self.pendingCoinShare) >= self.quorumNum and not self.ElectedLeader:
+            if len(self.pendingCoinShare) >= self.quorumNum:
                 threading.Thread(target=self.tryToElectLeader).start()
 
     """ def broadcast(self, msgType, msg):
@@ -188,19 +189,6 @@ class Node:
     def returnDoneChan(self):
         return self.doneCh
     
-
-
-
-    """ def verifySigED25519(self, peer, data, sig):
-        pubKey = self.publicKeyMap.get(peer)
-        if not pubKey:
-            self.logger.error("node is unknown", node=peer)
-            return False
-        dataAsBytes = encode(data)
-        valid = Sign.verify_signature(pubKey, dataAsBytes, sig)
-        if not valid:
-            self.logger.error("fail to verify the ED25519 signature")
-        return valid """
 
     def RunLoop(self): # à quoi sert RunLoop (quand est-ce que c'est appelé)
         #start = time.time_ns()
