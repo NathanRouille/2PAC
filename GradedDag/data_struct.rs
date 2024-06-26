@@ -43,3 +43,11 @@ pub struct Elect {
     partial_sig: Vec<u8>,
 }
 
+
+pub struct Message {
+    Block(Block),
+    Vote(Vote),
+    Ready(Ready),
+    Done(Done),
+    Elect(Elect),
+}
