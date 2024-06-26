@@ -240,16 +240,4 @@ impl CBC {
         }
     }
 
-    pub fn broadcast(&self, msg_type: u8, msg: &impl Serialize) -> Result<(), Box<dyn Error>> {
-        let msg_as_bytes = bincode::serialize(msg)?;
-        let sig = self.SignEd25519(&msg_as_bytes); // Assuming `sign_ed25519` is a method that signs the message
 
-        for addr_with_port in &self.clusterAddrWithPorts {
-            let mut net_conn = self.connPool.GetConn(addr_with_port)?; // Assuming `get_conn` is a method that retrieves a connection from the pool
-            conn::SendMsg(&mut net_conn, msg_type, &msg_as_bytes, &sig)?; // Assuming `send_msg` is a function that sends the message
-
-            self.connPool.ReturnConn(net_conn)?; // Assuming `return_conn` is a method that returns the connection to the pool
-        }
-        Ok(())
-    }
-}
