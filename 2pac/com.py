@@ -99,9 +99,6 @@ class Com:
     
 
 
-        
-
-
     def stop(self):
         #print("Stopping node...")
         for thread in self.threads:

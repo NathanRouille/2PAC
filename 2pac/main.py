@@ -1,7 +1,8 @@
-from tools import *
+from tools import start_com, broadcast, to_json
 import random
-
-
+from node import Node
+from sign import Sign
+from data_struct import *
 
 list_ports = [random.randint(1000, 9000) for i in range(4)]
 ports = {

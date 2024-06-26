@@ -1,15 +1,5 @@
 import json
 
-class Node:
-    def __init__(self, id : int, host : str, port : int, peers : list,leader : int, publickey, privatekey):
-        self.id = id
-        self.host = host
-        self.port = port
-        self.peers = peers
-        self.leader = leader
-        self.publickey = publickey
-        self.privatekey = privatekey
-
 
 class Block:
     def __init__(self, sender):

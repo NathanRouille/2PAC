@@ -4,7 +4,7 @@ import time
 import random
 
 #Importer d'autres fichier
-from sign import *
+from sign import verify_signed
 from data_struct import Block, Chain,Done,Elect  
 from tools import *
 from com import *
@@ -53,23 +53,25 @@ class Node:
         self.blockSend = {}
 
     def handleMsgLoop(self):
-        msgCh = self.trans.MsgChan()
+        msgCh = self.com.recv
         while True:
             msgWithSig = msgCh.get()
             if not msgWithSig:
                 continue
-            msgAsserted = msgWithSig['Msg']
-            msg_type = type(msgAsserted).__name__
-            if not verify_signed():
+            msgAsserted = msgWithSig["data"]
+            msg_type = msgWithSig["type"]
+            msg_publickey= msgWithSig["public_key"]
+            msg_signature= msgWithSig["signature"]
+            if not verify_signed(msg_signature):
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
-            if msg_type == 'Block':
+            if msg_type == 'Block1':
                 threading.Thread(target=self.handleBlockMsg, args=(msgAsserted,)).start()
-            elif msg_type == 'Vote':
+            elif msg_type == 'Vote1':
                 threading.Thread(target=self.handleVoteMsg, args=(msgAsserted,)).start()
-            elif msg_type == 'Ready':
+            elif msg_type == 'Block2':
                 threading.Thread(target=self.handleReadyMsg, args=(msgAsserted,)).start()
-            elif msg_type == 'Done':
+            elif msg_type == 'Vote2':
                 threading.Thread(target=self.handleDoneMsg, args=(msgAsserted,)).start()
             elif msg_type == 'Elect':
                 threading.Thread(target=self.handleElectMsg, args=(msgAsserted,)).start()
@@ -111,7 +113,7 @@ class Node:
     def storeBlockMsg(self, block: Block):
         self.blocks[block.Sender] = block
 
-    def storeVoteMsg(self, vote: Vote):
+    def storeVoteMsg(self, vote: Vote): #si déjà envoyé block hauteur 2 ne rien faire, vérifier signature vote
         if vote.blockSender not in self.pendingVote:
             self.pendingVote[vote.blockSender] = 0
         self.pendingVote[vote.blockSender] += 1
@@ -132,10 +134,8 @@ class Node:
 
 
     def checkIfQuorumVote(self, round, blockSender):
-        with self.lock: #est-ce que c'est nécessaire de lock
-            voteCount = self.pendingVote.get(blockSender, 0)
-        if voteCount >= self.quorumNum:
-            threading.Thread(target=self.tryToOutputBlocks, args=(round, blockSender)).start() #on peut rel
+        if self.pendingVote >= self.quorumNum:
+            threading.Thread(target=self.tryToOutputBlocks, args=(round, blockSender)).start()
 
     def checkIfQuorumReady(self, ready: Ready):
         with self.lock: #est-ce que c'est nécessaire de lock
@@ -145,8 +145,6 @@ class Node:
         doneMsg = Done(doneSender=self.name, blockSender=ready.blockSender, done=partialSig, hash=ready.hash, round=ready.round)
         self.doneCh.put(doneMsg)
 
-
-        
 
     def tryToOutputBlocks(self, round, sender):
         with self.lock:
@@ -201,7 +199,7 @@ class Node:
 
 
 
-    def verifySigED25519(self, peer, data, sig):
+    """ def verifySigED25519(self, peer, data, sig):
         pubKey = self.publicKeyMap.get(peer)
         if not pubKey:
             self.logger.error("node is unknown", node=peer)
@@ -210,7 +208,7 @@ class Node:
         valid = Sign.verify_signature(pubKey, dataAsBytes, sig)
         if not valid:
             self.logger.error("fail to verify the ED25519 signature")
-        return valid
+        return valid """
 
     def RunLoop(self): # à quoi sert RunLoop (quand est-ce que c'est appelé)
         #start = time.time_ns()
