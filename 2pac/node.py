@@ -73,12 +73,13 @@ class Node:
                 threading.Thread(target=self.handleBlock1Msg, args=(block1,)).start()
             
             elif msg_type == 'Vote1':
-                print(f"msgAsserted de Vote1 : {msgAsserted} pour id= {self.id}")
+                #print(f"msgAsserted de Vote1 : {msgAsserted} pour id= {self.id}")
                 vote1=Vote1(msgAsserted["sender"],msgAsserted["Block_sender"])
                 threading.Thread(target=self.handleVote1Msg, args=(vote1,)).start()
             
             elif msg_type == 'Block2':
                 print(f"msgAsserted de Block2 : {msgAsserted} pour id= {self.id}")
+                print(f"Bla self.blocks1 : {self.blocks1}")
                 block2=Block2(msgAsserted["sender"],self.blocks1[msgAsserted["Block_sender"]],msgAsserted["qc"])
                 threading.Thread(target=self.handleBlock2Msg, args=(block2,)).start()
             """
@@ -157,6 +158,8 @@ class Node:
             if len(self.qc1) >= self.quorumNum:
                 #print(f"self.block2 : {self.block2} et qc1 : {self.qc1} pour id= {self.id}")
                 #print(f"self.blocks1[msg.sender].block : {self.blocks1[msg.sender].block}")
+                #print(f"self.blocks1[msg.sender].block : {self.blocks1[msg.sender].block} pour id= {self.id}")
+                #print(f"self.blocks1[msg.sender].sender : {self.blocks1[msg.sender].sender} pour id= {self.id}")
                 self.block2.append(self.blocks1[msg.sender].sender)
                 #print(f"self.block1 : {self.block1} pour id= {self.id}")
                 threading.Thread(target=self.broadcastBlock2, args=(self.block1[0],self.qc1)).start()
