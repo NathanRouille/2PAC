@@ -3,7 +3,8 @@ import socket
 import threading
 from data_struct import Node
 from sign import *
-
+import queue
+import json
 
 class Com:
     def __init__(self,node: Node , host = None, port = None, peers = None):
@@ -14,7 +15,7 @@ class Com:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.threads = []
-        self.recv = []
+        self.recv = queue.Queue()
 
     def start(self):
         #print(f"Node started at {self.host}:{self.port}")
@@ -61,11 +62,11 @@ class Com:
                     break
                 message = data.decode('utf-8')
                 
-
+                message = json.loads(message)
                 #self.show_message(message)
-                self.recv.append(json.loads(message))
-                print(verify_signed(self.recv[-1]["signature"]))
-                #print(f'recv of {self.port} :: {self.recv}')
+                self.recv.put(message)
+                print(verify_signed(self.recv.get()["signature"]))
+                print(f'recv of {self.port} :: {type(self.recv.get())}')
             except Exception as e:
                 print(f"Error handling client: {e}")
                 break
