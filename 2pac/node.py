@@ -17,8 +17,6 @@ class Node:
 
         # attributs propres au Node
         self.id = id #de 1 à 4
-    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool):
-        self.id = id
         self.host = host
         self.port = port
         self.peers = peers
@@ -99,7 +97,7 @@ class Node:
 
     def handleVote1Msg(self, vote1: Vote1):
         print(f"handleVote1Msg de id= {self.id}")
-        if not self.broadcastedBlock2 and vote1.sender not in self.qc1 and vote1.block_sender == self.id:
+        if not self.block2 and vote1.sender not in self.qc1 and vote1.block_sender == self.id:
             with self.lock:
                 self.storeVote1Msg(vote1)
             threading.Thread(target=self.checkIfQuorum, args=(vote1,)).start()
@@ -135,9 +133,8 @@ class Node:
         self.qc1.append(vote1.sender)
 
     def storeBlock2Msg(self, block2: Block2): 
-        self.pendingReady[block2.sender] = block2
+        self.blocks2[block2.sender] = block2
 
-    def storeVote2Msg(self, vote2: Vote2):
     def storeVote2Msg(self, vote2: Vote2):
         self.qc2.append(vote2.sender)
         #self.moveRound += 1 #toujours besoin de ça ?
@@ -192,11 +189,10 @@ class Node:
         message=Block1(self.id,block)
         broadcast(self.com, to_json(message, self))
         with self.lock:
-            self.boradcastedBlock1 = True
+            self.block1.append(block)
 
-
-            self.broadcastedBlock2 = True
-            self.broadcastedCoinShare = True
+            #self.block2.append(block)
+            #self.coinshare.append(coinsharesig)
             
 
     def broadcastVote1(self, blockSender):
@@ -218,12 +214,6 @@ class Node:
         message=Vote1(self.id,blockSender)
         broadcast(self.com, to_json(message, self))
 
-
-    def returnBlockChan(self):
-        return self.blockCh
-
-    def returnDoneChan(self):
-        return self.doneCh
     
 
     def RunLoop(self): # à quoi sert RunLoop (quand est-ce que c'est appelé)
@@ -253,7 +243,3 @@ class Node:
         with self.lock:
             if self.moveRound >= self.quorumNum:
                 self.round += 1
-
-    def NewBlock(self):
-        timestamp = time.time_ns()
-        return Block(self.name,timestamp)
