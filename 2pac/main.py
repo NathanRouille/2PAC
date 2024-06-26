@@ -13,10 +13,10 @@ ports = {
     "node4": list_ports[3],
 }
 
-block1 = Block1(1, "tx")
-block2 = Block1(2, "tx")
-block3 = Block1(3, "tx")
-block4 = Block1(4, "tx")
+block1 = Block1(1)
+block2 = Block1(2)
+block3 = Block1(3)
+block4 = Block1(4)
 
 
 vote = Vote2(0,1)

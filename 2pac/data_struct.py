@@ -67,3 +67,4 @@ class Vote2(Vote):
 class Elect:
     def __init__(self, sender):
         self.sender = sender
+        #on abstrait data = qcCoinshare

@@ -24,7 +24,6 @@ def to_json(obj,node):
     if isinstance(obj, Block1):
         data = {
             'sender': obj.sender,
-            'Block': obj.block
         }
         return json.dumps({
             'type': 'Block1',
@@ -34,8 +33,7 @@ def to_json(obj,node):
         })
     elif isinstance(obj, Block2):
         data = {
-            'sender': obj.sender,
-            'Block_sender': obj.block,  
+            'sender': obj.sender,  
             'qc': obj.qc
         }
         return json.dumps({

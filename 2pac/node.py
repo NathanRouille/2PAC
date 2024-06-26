@@ -27,9 +27,12 @@ class Node:
         self.com=Com(self.id,self.port,self.peers,self.delay)
 
         #attributs pour stocker les blocks et coinshare du Node
-        self.block1 = []
-        self.block2 = []
-        self.coinshare = []
+        self.sentBlock1 = False
+        self.sentBlock2 = False
+
+        self.block1 = [] #ajouter Block1 à blocks1 plutôt
+        self.block2 = [] #ajouter Block2 à blocks2 plutôt
+        self.coinshare = [] #vérifier si on adapte ou non avec un sentCoinshare
         
         #attributs pour stocker les messages des autres Nodes
         self.blocks1 = {}
@@ -69,7 +72,7 @@ class Node:
             print(f"msgAsserted : {msgAsserted}") """
             if msg_type == 'Block1':
                 #print(f"msgAsserted de Block1 : {msgAsserted} pour id= {self.id}")
-                block1=Block1(msgAsserted["sender"],msgAsserted["Block"])
+                block1=Block1(msgAsserted["sender"])
                 threading.Thread(target=self.handleBlock1Msg, args=(block1,)).start()
             
             elif msg_type == 'Vote1':
@@ -78,15 +81,16 @@ class Node:
                 threading.Thread(target=self.handleVote1Msg, args=(vote1,)).start()
             
             elif msg_type == 'Block2':
-                print(f"msgAsserted de Block2 : {msgAsserted} pour id= {self.id}")
-                print(f"Bla self.blocks1 : {self.blocks1}")
-                block2=Block2(msgAsserted["sender"],self.blocks1[msgAsserted["Block_sender"]],msgAsserted["qc"])
+                #print(f"msgAsserted de Block2 : {msgAsserted} pour id= {self.id}")
+                #print(f"Bla self.blocks1 : {self.blocks1}")
+                block2=Block2(msgAsserted["sender"],msgAsserted["qc"])
                 threading.Thread(target=self.handleBlock2Msg, args=(block2,)).start()
-            """
+            
             elif msg_type == 'Vote2':
-                print(f"msgAsserted de Vote2 : {msgAsserted}")
+                print(f"msgAsserted de Vote2 : {msgAsserted} pour id= {self.id}")
                 vote2=Vote2(msgAsserted["sender"],msgAsserted["QC_sender"])
                 threading.Thread(target=self.handleVote2Msg, args=(vote2,)).start()
+            """
             elif msg_type == 'Elect':
                 elect=Elect(msgAsserted["sender"])
                 threading.Thread(target=self.handleElectMsg, args=(elect,)).start() """
@@ -104,16 +108,16 @@ class Node:
 
     def handleVote1Msg(self, vote1: Vote1):
         print(f"handleVote1Msg de id= {self.id}")
-        if not self.block2 and vote1.sender not in self.qc1 and vote1.block_sender == self.id:
-            print(f"vote1 : {vote1} pour id= {self.id}")
-            with self.lock:
+        with self.lock:
+            if not self.sentBlock2 and vote1.sender not in self.qc1 and vote1.block_sender == self.id:
+                #print(f"vote1 : {vote1} pour id= {self.id}")
                 self.storeVote1Msg(vote1)
-            threading.Thread(target=self.checkIfQuorum, args=(vote1,)).start()
+                self.checkIfQuorum(vote1)
 
     def handleBlock2Msg(self, block2: Block2):#vérifier le qc ?
         print(f"handleBlock2Msg de id= {self.id}")
         if block2.sender not in self.blocks2:
-            print(f"OK pour id= {self.id}")
+            #print(f"OK pour id= {self.id}")
             with self.lock:
                 self.storeBlock2Msg(block2)
             threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
@@ -155,14 +159,12 @@ class Node:
     def checkIfQuorum(self, msg):
         print(f"checkIfQuorum de id= {self.id}")
         if type(msg) == Vote1:
-            if len(self.qc1) >= self.quorumNum:
-                #print(f"self.block2 : {self.block2} et qc1 : {self.qc1} pour id= {self.id}")
-                #print(f"self.blocks1[msg.sender].block : {self.blocks1[msg.sender].block}")
-                #print(f"self.blocks1[msg.sender].block : {self.blocks1[msg.sender].block} pour id= {self.id}")
-                #print(f"self.blocks1[msg.sender].sender : {self.blocks1[msg.sender].sender} pour id= {self.id}")
-                self.block2.append(self.blocks1[msg.sender].sender)
-                #print(f"self.block1 : {self.block1} pour id= {self.id}")
-                threading.Thread(target=self.broadcastBlock2, args=(self.block1[0],self.qc1)).start()
+            with self.lock:
+                if len(self.qc1) >= self.quorumNum:
+                    
+                    self.block2.append(True) ####A modifier###
+                    self.sentBlock2 = True
+                    threading.Thread(target=self.broadcastBlock2, args=(self.qc1,)).start()
 
         elif type(msg) == Vote2:
             print("OKK")
@@ -215,9 +217,9 @@ class Node:
         broadcast(self.com, to_json(message, self))
         
 
-    def broadcastBlock2(self, block, qc):
+    def broadcastBlock2(self, qc):
         print(f"broadcastBlock2 de id= {self.id}")
-        message=Block2(self.id,block.block,qc)
+        message=Block2(self.id,qc)
         broadcast(self.com, to_json(message, self))
         
         """ partialSig = Sign.sign_ts_partial(self.tsPrivateKey, hash)
