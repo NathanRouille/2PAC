@@ -123,3 +123,25 @@ fn reflected_types_map() -> HashMap<u8, Type> {
     reflected_types_map.insert(5, Type::Elect);
     return reflected_types_map;
 }
+
+fn main() {
+    // Initialise le logger
+    env_logger::init();
+
+    // Parse les arguments de la ligne de commande
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() != 2 {
+        eprintln!("Usage: {} <config_file>", args[0]);
+        std::process::exit(1);
+    }
+    let config_file = &args[1];
+
+    // Charge la configuration
+    let conf = config::load_config(config_file);
+
+    // Crée un nouveau noeud
+    let mut node = new_node(&conf);
+
+    // Lance le noeud
+    node.run();
+}
