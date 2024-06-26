@@ -134,3 +134,27 @@ impl Logger {
         println!("{}", msg);
     }
 }
+
+impl Node {
+    fn new(name: String, private_key: Vec<u8>, ts_private_key: Vec<u8>, cluster_addr_with_ports: HashMap<String
+    , Socket
+    Addr>,
+
+    ) -> Self {
+        let (tx, rx) = channel();
+        let logger = Arc::new(Logger::new());
+        let cbc = Arc::new(CBC::new());
+        let node = Node {
+            name,
+            private_key,
+            ts_private_key,
+            cluster_addr_with_ports 
+            lock: Mutex::new(()),
+            msg_chan: Mutex::new(rx),
+            logger,
+            cbc,
+            is_faulty: false,
+        };
+    
+    }
+}
