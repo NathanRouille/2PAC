@@ -64,4 +64,10 @@ pub struct Block {
     timestamp: i64,
 }
 
-
+// Structure de l'élection
+#[derive(Serialize, Deserialize)]
+pub struct Elect {
+    sender: String,
+    round: u64,
+    partial_sig: Vec<u8>,
+}
