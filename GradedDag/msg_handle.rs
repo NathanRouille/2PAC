@@ -154,7 +154,19 @@ impl Node {
             logger,
             cbc,
             is_faulty: false,
-        };
-    
+        };  
+        let n = Arc::clone(&node);
+        thread::spawn(move || {
+            n.cbc_output_block_loop();
+        });
+        let n = Arc::clone(&node);
+        thread::spawn(move || {
+            n.done_output_loop();
+        });
+        let n = Arc::clone(&node);
+        thread::spawn(move || {
+            n.handle_msg_loop();
+        });
+        node
     }
 }
