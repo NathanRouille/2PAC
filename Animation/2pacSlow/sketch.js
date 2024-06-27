@@ -8,9 +8,6 @@ let restartTime = 10000; // 6 seconds
 let simulationEnded = false;
 let endTime = 0;
 let horizontalDelay = 2000; // 800 milliseconds delay for horizontal alignment with P4
-let finalNode = null; // To store the final node
-let isPlaying = true; // To track if the simulation is playing
-let speedFactor = 5; // Default speed factor
 
 const voteColors = {
   100: 'red',    // R1, S1, T1
@@ -123,7 +120,7 @@ class Trait {
     strokeWeight(1);
     line(this.startX, this.startY, lerp(this.startX, this.endX, this.stepProgress), lerp(this.startY, this.endY, this.stepProgress));
     if (!this.arrived) {
-      this.stepProgress += (1 / totalSteps) * (speedFactor / 5);
+      this.stepProgress += 1 / totalSteps;
       if (this.stepProgress >= 1) {
         this.arrived = true;
         for (let point of points) {
@@ -133,10 +130,8 @@ class Trait {
         }
         // Check if simulation has ended
         if (traits.every(trait => trait.arrived)) {
-          if (checkElectionStageCompleted()) {
-            simulationEnded = true;
-            endTime = millis();
-          }
+          simulationEnded = true;
+          endTime = millis();
         }
       }
     } else {
@@ -155,53 +150,31 @@ function setup() {
   createCanvas(1000, 600);
   stageWidth = width / stages.length;
   initializeNodesAndPoints();
-  // Event listener for play/stop button
-  select('#playStopButton').mousePressed(togglePlayStop);
-  // Event listener for speed slider
-  select('#speedSlider').input(updateSpeed);
 }
 
 function draw() {
-  if (isPlaying) {
-    background(255);
-    drawTimeStages();
-    drawPoints();
+  background(255);
+  drawTimeStages();
+  drawPoints();
 
-    for (let node of nodes) {
-      node.draw();
-      node.sendTraits();
-    }
+  for (let node of nodes) {
+    node.draw();
+    node.sendTraits();
+  }
 
-    for (let point of points) {
-      point.draw();
-      point.sendTraits();
-    }
+  for (let point of points) {
+    point.draw();
+    point.sendTraits();
+  }
 
-    for (let trait of traits) {
-      trait.draw();
-    }
+  for (let trait of traits) {
+    trait.draw();
+  }
 
-    if (simulationEnded) {
-      if (!finalNode) {
-        // Select a random node label (P1, P2, P3, P4)
-        const labels = ['P1', 'P2', 'P3', 'P4'];
-        const randomLabel = random(labels);
-        // Create a new Node at the right of the canvas
-        finalNode = new Node(width - 50, height / 2, randomLabel, 0);
-        finalNode.color = 'green'; // Set color to green
-      }
-      // Draw the final node
-      fill('green');
-      ellipse(finalNode.x, finalNode.y, 50, 50);
-      fill(255);
-      textAlign(CENTER, CENTER);
-      text(finalNode.label, finalNode.x, finalNode.y);
-
-      if (millis() - endTime >= restartTime) {
-        initializeNodesAndPoints();
-        simulationEnded = false;
-        finalNode = null; // Reset the final node
-      }
+  if (simulationEnded) {
+    if (millis() - endTime >= restartTime) {
+      initializeNodesAndPoints();
+      simulationEnded = false;
     }
   }
 }
@@ -272,22 +245,4 @@ function initializeNodesAndPoints() {
   points.push(new Point(stageWidth * 5.5, 250, 'U2', 5));
   points.push(new Point(stageWidth * 5.5, 400, 'U3', 5));
   points.push(new Point(stageWidth * 5.5, 550, 'U4', 5));
-}
-
-function checkElectionStageCompleted() {
-  return points.every(point => {
-    if (point.stage === 5) {
-      return point.received > 0;
-    }
-    return true;
-  });
-}
-
-function togglePlayStop() {
-  isPlaying = !isPlaying;
-  select('#playStopButton').html(isPlaying ? 'Stop' : 'Play');
-}
-
-function updateSpeed() {
-  speedFactor = select('#speedSlider').value();
 }
