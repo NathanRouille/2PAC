@@ -2,6 +2,7 @@ import math
 import threading
 import time
 import random
+import inspect
 
 #Importer d'autres fichier
 from sign import verify_signed, Sign
@@ -13,7 +14,7 @@ random.seed(7777)
 
 
 class Node:
-    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool):
+    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool,start_time):
 
         # attributs propres au Node
         self.id = id #de 1 à 4
@@ -51,13 +52,87 @@ class Node:
         self.nodeNum = 4
         self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)
 
+        self.starter_time = start_time
+
+        self.flag_vote1 = False
+        self.flag_vote2 = False
+        self.flag_elect = False
+        self.flag_block1 = False
+        self.flag_block2 = False
+        self.flag_leader = False
+
+        self.times = {}
+
         #attributs de test de performances
         #self.evaluation = []
         #self.commitTime = []
            
+    
+    def logger(self):
+        # Obtenez le cadre de pile actuel
+        current_frame = inspect.currentframe()
+        # Obtenez le cadre de pile de l'appelant (le cadre parent)
+        caller_frame = current_frame.f_back
+        # Obtenez le nom de la fonction appelante
+        function_name = caller_frame.f_code.co_name
 
+        if function_name == "handleBlock1Msg":
+            if not self.flag_block1:
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['block1'] = delta
+                self.flag_block1 = True
+            else:
+                pass
+        elif function_name == "handleBlock2Msg":
+            if not self.flag_block2:
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['block2'] = delta
+                self.flag_block2 = True
+            else:
+                pass
+        elif function_name == "handleVote2Msg":
+            if not self.flag_vote2:
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['vote2'] = delta
+                self.flag_vote2 = True
+            else:
+                pass
+        elif function_name == "handleVote1Msg":
+            if not self.flag_vote1:
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['vote1'] = delta
+                self.flag_vote1 = True
+            else:
+                pass 
+        elif function_name == "handleElectMsg":
+            if not self.flag_elect:
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['elect'] = delta                
+                self.flag_elect = True
+            else:
+                pass
+        elif function_name == "handleLeaderMsg":
+            if not self.flag_leader:
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['leader'] = delta               
+                self.flag_leader = True
+            else:
+                pass
+        else:                   
+            print(f"secondary fonction: {function_name} reached by node: {self.id}")
+
+
+   
     def handleMsgLoop(self):
-        print(f"handleMsgLoop de id= {self.id}")
+        ''' Fonction pour gérer les messages reçus par le Node'''
+
+        self.logger()
         msgCh = self.com.recv
         while True:
             msgWithSig = msgCh.get()
@@ -69,8 +144,6 @@ class Node:
             if not verify_signed(msg_signature):
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
-            """ print(f"msg_type : {msg_type}")
-            print(f"msgAsserted : {msgAsserted}") """
             if msg_type == 'Block1':
                 #print(f"msgAsserted de Block1 : {msgAsserted} pour id= {self.id}")
                 block1=Block1(msgAsserted["sender"])
@@ -97,14 +170,16 @@ class Node:
                 elect=Elect(msgAsserted["sender"])
                 threading.Thread(target=self.handleElectMsg, args=(elect,)).start()
             elif msg_type == 'Leader':
-                print(f"msgAsserted de Leader : {msgAsserted} pour id= {self.id}")
+                #print(f"msgAsserted de Leader : {msgAsserted} pour id= {self.id}")
                 leader=Leader(msgAsserted["sender"],msgAsserted["id_leader"])
                 threading.Thread(target=self.handleLeaderMsg, args=(leader,)).start()
             
 
-
+#############       Handle de Message       #############
+#########################################################
     def handleBlock1Msg(self, block1: Block1):
-        print(f"handleBlock1Msg de id= {self.id}")
+        ''' Fonction pour gérer les messages de type Block1 puis broadcast d'un message de type Vote1'''
+        self.logger()
         if block1.sender not in self.blocks1:
             with self.lock:
                 self.storeBlock1Msg(block1)
@@ -113,45 +188,47 @@ class Node:
     
 
     def handleVote1Msg(self, vote1: Vote1):
-        print(f"handleVote1Msg de id= {self.id}")
+        ''' Fonction pour gérer les messages de type Vote1 puis check du Quorum'''
+        self.logger()
         with self.lock:
             if not self.sentBlock2 and vote1.sender not in self.qc1 and vote1.block_sender == self.id:
-                #print(f"vote1 : {vote1} pour id= {self.id}")
                 self.storeVote1Msg(vote1)
                 self.checkIfQuorum(vote1)
 
     def handleBlock2Msg(self, block2: Block2):#vérifier le qc ?
-        print(f"handleBlock2Msg de id= {self.id}")
+        ''' Fonction pour gérer les messages de type Block2 puis broadcast d'un message de type Vote2'''
+        self.logger()
         if block2.sender not in self.blocks2:
-            #print(f"OK pour id= {self.id}")
             with self.lock:
                 self.storeBlock2Msg(block2)
             threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
             self.tryToCommit() #est ce qu'on a besoin de commit là
 
     def handleVote2Msg(self, vote2: Vote2):
-        print(f"handleVote2Msg de id= {self.id}")
+        ''' Fonction pour gérer les messages de type Vote2 puis check du Quorum'''
+        self.logger()
+        with self.lock:
+            if not self.sentCoinShare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:   #print(f"vote1 : {vote1} pour id= {self.id}")
+                self.storeVote2Msg(vote2)
+                self.checkIfQuorum(vote2)
         """ if not self.coinshare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:
             with self.lock:
                 self.storeVote2Msg(vote2)
             threading.Thread(target=self.checkIfQuorum, args=(vote2,)).start()
             #threading.Thread(target=self.tryToNextRound).start() #vérifier si toujours besoin de ça
             self.tryToCommit() #vérifier si toujours besoin de ça (leader dans qc2 ?) """
-        
-        with self.lock:
-            if not self.sentCoinShare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:   #print(f"vote1 : {vote1} pour id= {self.id}")
-                self.storeVote2Msg(vote2)
-                self.checkIfQuorum(vote2)
 
     def handleElectMsg(self, elect: Elect):
-        print(f"handleElectMsg de id= {self.id}")
+        ''' Fonction pour gérer les messages de type Elect puis check du Quorum'''
+        self.logger()
         with self.lock:
             if not self.leader and elect.sender not in self.elect:
                 self.storeElectMsg(elect)
                 self.checkIfQuorum(elect)
     
     def handleLeaderMsg(self, leader: Leader):
-        print(f"handleLeaderMsg de id= {self.id}")
+        ''' Fonction pour gérer les messages de type Leader puis tryToCommit'''
+        self.logger()
         with self.lock:
             if not self.leader:
                 print(f"Commit pour id= {self.id}")
@@ -160,44 +237,49 @@ class Node:
     
 
 
-
+##############       Fonction Store       ###############
+#########################################################
     def storeBlock1Msg(self, block1: Block1):
+        self.logger()
         self.blocks1[block1.sender] = block1
 
     def storeVote1Msg(self, vote1: Vote1):
+        self.logger()
         self.qc1.append(vote1.sender)
 
     def storeBlock2Msg(self, block2: Block2): 
+        self.logger()
         self.blocks2[block2.sender] = block2
 
     def storeVote2Msg(self, vote2: Vote2):
+        self.logger()
         self.qc2.append(vote2.sender)
+        #print(f"qc2 : {self.qc2} pour id= {self.id}")
         #self.moveRound += 1 #toujours besoin de ça ?
 
     def storeElectMsg(self, elect: Elect):
+        self.logger()
         self.elect[elect.sender] = elect
 
-
+##############       Check du Quorum       ##############
+#########################################################
     def checkIfQuorum(self, msg):
-        print(f"checkIfQuorum de id= {self.id}")
+        self.logger()
         if type(msg) == Vote1:
             with self.lock:
                 if len(self.qc1) >= self.quorumNum:
-                    
                     self.block2.append(True) ####A modifier###
                     self.sentBlock2 = True
                     threading.Thread(target=self.broadcastBlock2, args=(self.qc1,)).start()
 
         elif type(msg) == Vote2:
-            """ if len(self.qc2) >= self.quorumNum:
-                threading.Thread(target=self.broadcastElect).start() """
-
             with self.lock:
                 if len(self.qc2) >= self.quorumNum:
-                    
                     self.coinshare.append(True) ####A modifier###
                     self.sentCoinShare = True
                     threading.Thread(target=self.broadcastElect, args=()).start()
+                """ if len(self.qc2) >= self.quorumNum:
+                threading.Thread(target=self.broadcastElect).start() """
 
         elif type(msg) == Elect:
             with self.lock:
@@ -206,9 +288,10 @@ class Node:
                     threading.Thread(target=self.broadcastLeader, args=()).start()
 
 
-
+##################       Commit       ###################
+#########################################################
     def tryToCommit(self):
-        print(f"tryToCommit de id= {self.id}")
+        self.logger()
         if self.leader and self.leader in self.qc2 and self.leader in self.blocks1: #leader dans qc2 = leader done avant
             leader_block = self.blocks1[self.leader]
             self.chain.append(leader_block)
@@ -219,59 +302,44 @@ class Node:
             #self.evaluation.append(latency)
             #self.commitTime.append(commit_time)
 
-
+#################       Broadcast       #################
+#########################################################
     def broadcastLeader(self):
-        print(f"broadcastLeader de id= {self.id}")
+        self.logger()
         print(f"Le Leader est {self.leader} pour id= {self.id}")
         message=Leader(self.id,self.leader)
         broadcast(self.com, to_json(message, self))
 
-    """ def broadcast(self, msgType, msg):
-        msgAsBytes = encode(msg)
-        sig = Sign.sign_ed25519(self.privateKey, msgAsBytes)
-        for addrWithPort in self.clusterAddrWithPorts:
-            netConn = self.connPool.get_conn(addrWithPort)
-            conn.send_msg(netConn, msgType, msg, sig)
-            self.connPool.return_conn(netConn) """
-
     def broadcastBlock1(self, block):
+        self.logger()
         with self.lock:
             self.block1.append(block)
         print(f"broadcastBlock1 de id= {self.id}")
         broadcast(self.com, to_json(block, self))
         
-
-        
-            
-
     def broadcastVote1(self, blockSender):
-        print(f"broadcastVote1 de id= {self.id}")
+        self.logger()
         message=Vote1(self.id,blockSender)
         broadcast(self.com, to_json(message, self))
         
-
     def broadcastBlock2(self, qc):
-        print(f"broadcastBlock2 de id= {self.id}")
+        self.logger()
         message=Block2(self.id,qc)
         broadcast(self.com, to_json(message, self))
-        
-        """ partialSig = Sign.sign_ts_partial(self.tsPrivateKey, hash)
-        ready = Block2(readySender=self.name, blockSender=blockSender, hash=hash, partialSig=partialSig)
-        self.broadcast('ReadyTag', ready) """
 
     def broadcastVote2(self, qc_sender):
-        print(f"broadcastVote2 de id= {self.id}")
+        self.logger()
         message=Vote2(self.id,qc_sender)
         broadcast(self.com, to_json(message, self))
 
     def broadcastElect(self):
-        print(f"broadcastElect de id= {self.id}")
+        self.logger()
         message=Elect(self.id)
         broadcast(self.com, to_json(message, self))
         
 
     
-
+    '''
     def RunLoop(self): # à quoi sert RunLoop (quand est-ce que c'est appelé)
         #start = time.time_ns()
         self.broadcastBlock(currentRound)
@@ -283,7 +351,7 @@ class Node:
         # wait all blocks are committed
         time.sleep(5)
 
-        '''with self.lock:
+        with self.lock:
             end = self.commitTime[-1]
             pastTime = (end - start) / 1e9
             blockNum = len(self.evaluation)
@@ -295,7 +363,7 @@ class Node:
         self.logger.info("the total commit", block_number=blockNum, time=pastTime)'''
 
 
-    def tryToNextRound(self):
+    """ def tryToNextRound(self):
         with self.lock:
             if self.moveRound >= self.quorumNum:
-                self.round += 1
+                self.round += 1 """
