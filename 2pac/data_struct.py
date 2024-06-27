@@ -24,7 +24,7 @@ class Block1(Block):
 class Block2(Block):
     def __init__(self, sender, qc):
         super().__init__(sender)
-        self.qc = qc
+        self.qc = qc #qc peut valoir None, comme on est que sur une seule view on considère toujours que le Block2 d'un replica extend le Block1 de ce même replica
     
     def to_json(self):
         return json.dumps({

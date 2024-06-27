@@ -252,6 +252,7 @@ class Node:
 
     def broadcastBlock1(self, block):
         self.logger()
+        self.blocks1[self.id]= block #on stock son propre Block1 pour pouvoir le commit si on est élu comme leader
         broadcast(self.com, to_json(block, self))
         
     def broadcastVote1(self, blockSender):

@@ -49,7 +49,7 @@ def write_result(node):
     node.log_data['Receptions Vote2']=node.datas_vote2
     node.log_data['Receptions Elect']=node.datas_elect
     node.log_data['Receptions Leader']=node.datas_leader
-    node.log_data['Commit']=["OK"]
+    node.log_data['Commit']=f"Block1 du node : {node.chain[0].sender}"
     node.write_log(node.log_data)
 
 def wait_and_write(node,duration):
@@ -81,6 +81,10 @@ if __name__ == "__main__":
     Nodes[2].broadcastBlock1(block3)
     Nodes[3].broadcastBlock1(block4)
     if not _2PAC_pire_cas:
+        Nodes[0].sentBlock2 = True
+        Nodes[1].sentBlock2 = True
+        Nodes[2].sentBlock2 = True
+        Nodes[3].sentBlock2 = True
         Nodes[0].broadcastBlock2(None)
         Nodes[1].broadcastBlock2(None)
         Nodes[2].broadcastBlock2(None)
