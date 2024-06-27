@@ -2,13 +2,11 @@ let nodes = [];
 let points = [];
 let stages = ['Nodes', 'Block 1', 'Vote 1', 'Block 2', 'Vote 2', 'Election'];
 let stageWidth;
-let totalSteps = 120; // Initial number of frames to complete one stage
+let totalSteps = 120; // Number of frames to complete one stage, doublé pour une propagation plus lente
 let traits = [];
 let restartTime = 6000; // 6 seconds
 let simulationEnded = false;
 let endTime = 0;
-let randomNodeLabel = '';
-let isPaused = false;
 
 const voteColors = {
   100: 'red',    // R1, S1, T1
@@ -16,8 +14,6 @@ const voteColors = {
   400: 'blue',   // R3, S3, T3
   550: 'orange'  // R4, S4, T4
 };
-
-const nodeLabels = ['P1', 'P2', 'P3', 'P4'];
 
 class Node {
   constructor(x, y, label, startDelay) {
@@ -120,10 +116,9 @@ class Trait {
           }
         }
         // Check if simulation has ended
-        if (points.filter(point => point.stage === 5).every(point => point.received >= 3)) {
+        if (traits.every(trait => trait.arrived)) {
           simulationEnded = true;
           endTime = millis();
-          randomNodeLabel = random(nodeLabels);
         }
       }
     } else {
@@ -139,22 +134,12 @@ class Trait {
 }
 
 function setup() {
-  createCanvas(1200, 600); // Increased canvas width to accommodate the green circle on the right
+  createCanvas(1000, 600);
   stageWidth = width / stages.length;
   initializeNodesAndPoints();
-
-  let speedSlider = select('#speedSlider');
-  speedSlider.input(() => {
-    totalSteps = speedSlider.value();
-  });
-
-  let playPauseButton = select('#playPauseButton');
-  playPauseButton.mousePressed(togglePlayPause);
 }
 
 function draw() {
-  if (isPaused) return;
-
   background(255);
   drawTimeStages();
   drawPoints();
@@ -174,7 +159,6 @@ function draw() {
   }
 
   if (simulationEnded) {
-    drawEndCircle();
     if (millis() - endTime >= restartTime) {
       initializeNodesAndPoints();
       simulationEnded = false;
@@ -213,15 +197,6 @@ function drawPoints() {
   }
 }
 
-function drawEndCircle() {
-  fill('green');
-  noStroke();
-  ellipse(width - 50, height / 2, 50, 50);
-  fill(255);
-  textAlign(CENTER, CENTER);
-  text(randomNodeLabel, width - 50, height / 2);
-}
-
 function initializeNodesAndPoints() {
   nodes = [];
   points = [];
@@ -257,10 +232,4 @@ function initializeNodesAndPoints() {
   points.push(new Point(stageWidth * 5.5, 250, 'U2', 5));
   points.push(new Point(stageWidth * 5.5, 400, 'U3', 5));
   points.push(new Point(stageWidth * 5.5, 550, 'U4', 5));
-}
-
-function togglePlayPause() {
-  isPaused = !isPaused;
-  let playPauseButton = select('#playPauseButton');
-  playPauseButton.html(isPaused ? 'Play' : 'Pause');
 }
