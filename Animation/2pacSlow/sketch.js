@@ -13,14 +13,14 @@ let isPlaying = true; // To track if the simulation is playing
 let speedFactor = 5; // Default speed factor
 
 const voteColors = {
-  100: '#ff9aa2',    // Pastel red
-  250: '#ffb7b2',    // Pastel orange
-  400: '#ffdac1',    // Pastel yellow
+  'block': '#ff9aa2',    // Pastel red
+  'vote': '#ffb7b2',    // Pastel orange
+  'qc': '#ffdac1',    // Pastel yellow
   550: '#e2f0cb'     // Pastel green
 };
 
 class Node {
-  constructor(x, y, label, startDelay) {
+  constructor(x, y, label, startDelay,type) {
     this.x = x;
     this.y = y;
     this.label = label;
@@ -28,6 +28,7 @@ class Node {
     this.stage = 0; // Nodes are always at stage 0
     this.startDelay = startDelay;
     this.startTime = millis();
+    this.type = type
   }
 
   draw() {
@@ -45,7 +46,7 @@ class Node {
     if (!this.sent && millis() - this.startTime >= this.startDelay) {
       for (let point of points) {
         if (point.stage === 1 && this.y !== point.y) {
-          let trait = new Trait(this.x, this.y, point.x, point.y, 0, 'blue');
+          let trait = new Trait(this.x, this.y, point.x, point.y, 0, voteColors[this.type]);
           
           // Add delay if horizontally aligned with P4
           if (this.y === 550) {
@@ -61,13 +62,14 @@ class Node {
 }
 
 class Point {
-  constructor(x, y, stage) {
+  constructor(x, y, stage,type) {
     this.x = x;
     this.y = y;
     this.received = 0;
     this.stage = stage;
     this.sent = false;
     this.color = '#355c7d'; // Default pastel color for points
+    this.type = type
   }
 
   draw() {
@@ -83,7 +85,7 @@ class Point {
     if (this.received >= requiredReceived && !this.sent) {
       for (let point of points) {
         if (this.stage + 1 === point.stage && this.y !== point.y) {
-          let trait = new Trait(this.x, this.y, point.x, point.y, 0, 'blue');
+          let trait = new Trait(this.x, this.y, point.x, point.y, 0, voteColors[this.type]);
           
           // Add delay if horizontally aligned with P4
           if (this.y === 550) {
@@ -98,10 +100,10 @@ class Point {
   }
 
   receiveTrait(trait) {
-    if (this.stage === 2 || this.stage === 4) { // Change color for Vote 1 and Vote 2 stages
+/*     if (this.stage === 2 || this.stage === 4) { // Change color for Vote 1 and Vote 2 stages
       this.color = voteColors[this.y] || 'blue';
       trait.color = this.color;
-    }
+    } */
     this.received++;
   }
 }
@@ -115,6 +117,8 @@ class Trait {
     this.stepProgress = stepProgress;
     this.color = color;
     this.arrived = false;
+    this.speed = Math.random()*1 + 1; // Random speed between 1 and 3
+
   }
 
   draw() {
@@ -122,7 +126,7 @@ class Trait {
     strokeWeight(3);
     line(this.startX, this.startY, lerp(this.startX, this.endX, this.stepProgress), lerp(this.startY, this.endY, this.stepProgress));
     if (!this.arrived) {
-      this.stepProgress += (1 / totalSteps) * (speedFactor / 5);
+      this.stepProgress += (this.speed / 10000*totalSteps) * (speedFactor / 10);
       if (this.stepProgress >= 1) {
         this.arrived = true;
         for (let point of points) {
@@ -131,7 +135,7 @@ class Trait {
           }
         }
         // Check if simulation has ended
-        if (traits.every(trait => trait.arrived)) {
+        if (traits.filter(trait => trait.arrived).length >= 57) {
           if (checkElectionStageCompleted()) {
             simulationEnded = true;
             endTime = millis();
@@ -240,35 +244,35 @@ function initializeNodesAndPoints() {
   traits = [];
   simulationEnded = false;
 
-  nodes.push(new Node(stageWidth / 2, 100, 'P1', 0));
-  nodes.push(new Node(stageWidth / 2, 250, 'P2', 0));
-  nodes.push(new Node(stageWidth / 2, 400, 'P3', 0));
-  nodes.push(new Node(stageWidth / 2, 550, 'P4', 2000)); // Adding a delay of 2000 milliseconds for P4
+  nodes.push(new Node(stageWidth / 2, 100, 'P1', 0, 'block'));
+  nodes.push(new Node(stageWidth / 2, 250, 'P2', 0, 'block'));
+  nodes.push(new Node(stageWidth / 2, 400, 'P3', 0, 'block'));
+  nodes.push(new Node(stageWidth / 2, 550, 'P4', 2000, 'block')); // Adding a delay of 2000 milliseconds for P4
 
-  points.push(new Point(stageWidth * 1.5, 100, 1));
-  points.push(new Point(stageWidth * 1.5, 250, 1));
-  points.push(new Point(stageWidth * 1.5, 400, 1));
-  points.push(new Point(stageWidth * 1.5, 550, 1));
+  points.push(new Point(stageWidth * 1.5, 100, 1, 'vote'));
+  points.push(new Point(stageWidth * 1.5, 250, 1, 'vote'));
+  points.push(new Point(stageWidth * 1.5, 400, 1, 'vote'));
+  points.push(new Point(stageWidth * 1.5, 550, 1, 'vote'));
 
-  points.push(new Point(stageWidth * 2.5, 100, 2));
-  points.push(new Point(stageWidth * 2.5, 250, 2));
-  points.push(new Point(stageWidth * 2.5, 400, 2));
-  points.push(new Point(stageWidth * 2.5, 550, 2));
+  points.push(new Point(stageWidth * 2.5, 100, 2,'block'));
+  points.push(new Point(stageWidth * 2.5, 250, 2,'block'));
+  points.push(new Point(stageWidth * 2.5, 400, 2,'block'));
+  points.push(new Point(stageWidth * 2.5, 550, 2,'block'));
 
-  points.push(new Point(stageWidth * 3.5, 100, 3));
-  points.push(new Point(stageWidth * 3.5, 250, 3));
-  points.push(new Point(stageWidth * 3.5, 400, 3));
-  points.push(new Point(stageWidth * 3.5, 550, 3));
+  points.push(new Point(stageWidth * 3.5, 100, 3, 'qc'));
+  points.push(new Point(stageWidth * 3.5, 250, 3, 'qc'));
+  points.push(new Point(stageWidth * 3.5, 400, 3, 'qc'));
+  points.push(new Point(stageWidth * 3.5, 550, 3, 'qc'));
 
-  points.push(new Point(stageWidth * 4.5, 100, 4));
-  points.push(new Point(stageWidth * 4.5, 250, 4));
-  points.push(new Point(stageWidth * 4.5, 400, 4));
-  points.push(new Point(stageWidth * 4.5, 550, 4));
+  points.push(new Point(stageWidth * 4.5, 100, 4,'vote'));
+  points.push(new Point(stageWidth * 4.5, 250, 4,'vote'));
+  points.push(new Point(stageWidth * 4.5, 400, 4,'vote'));
+  points.push(new Point(stageWidth * 4.5, 550, 4,'vote'));
 
-  points.push(new Point(stageWidth * 5.5, 100, 5));
-  points.push(new Point(stageWidth * 5.5, 250, 5));
-  points.push(new Point(stageWidth * 5.5, 400, 5));
-  points.push(new Point(stageWidth * 5.5, 550, 5));
+  points.push(new Point(stageWidth * 5.5, 100, 5,'qc'));
+  points.push(new Point(stageWidth * 5.5, 250, 5,'qc'));
+  points.push(new Point(stageWidth * 5.5, 400, 5,'qc'));
+  points.push(new Point(stageWidth * 5.5, 550, 5,'qc'));
 }
 
 function checkElectionStageCompleted() {
