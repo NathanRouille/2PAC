@@ -210,7 +210,7 @@ class Node:
         ''' Fonction pour gérer les messages de type Vote2 puis check du Quorum'''
         self.logger()
         with self.lock:
-            if vote2.block_sender in self.qc2 and vote2.sender not in self.qc2[vote2.block_sender]:   #not self.sentCoinShare and 
+            if vote2.qc_sender in self.qc2 and vote2.sender not in self.qc2[vote2.qc_sender]:   #not self.sentCoinShare and 
                 self.storeVote2Msg(vote2)
                 self.checkIfQuorum(vote2)
                 self.tryToCommit()
@@ -257,9 +257,9 @@ class Node:
 
     def storeVote2Msg(self, vote2: Vote2):
         self.logger()
-        if vote2.block_sender not in self.qc2:
-            self.qc2[vote2.block_sender]=[]
-        self.qc2[vote2.block_sender].append(vote2.sender)
+        if vote2.qc_sender not in self.qc2:
+            self.qc2[vote2.qc_sender]=[]
+        self.qc2[vote2.qc_sender].append(vote2.sender)
 
     def storeElectMsg(self, elect: Elect):
         self.logger()
@@ -278,7 +278,7 @@ class Node:
                         threading.Thread(target=self.broadcastBlock2, args=(self.qc1[self.id],)).start()
                     elif msg.block_sender in self.blocks2: #et si pas encore voté pour le Block2 
                         #alors send vote2 (et edit la variable de vote2 attention à l'accès simultané des threads avec lock)
-                        #threading.Thread(target=self.broadcastVote2, args=(msg.block_sender,)).start()
+                        threading.Thread(target=self.broadcastVote2, args=(msg.block_sender,)).start()
                         
         elif type(msg) == Vote2:
             with self.lock:
