@@ -2,21 +2,21 @@ let nodes = [];
 let points = [];
 let stages = ['Nodes', 'Block 1', 'Vote 1', 'Block 2', 'Vote 2', 'Election'];
 let stageWidth;
-let totalSteps = 120; // Number of frames to complete one stage, doublé pour une propagation plus lente
+let totalSteps = 120; // Number of frames to complete one stage, doubled for slower propagation
 let traits = [];
-let restartTime = 10000; // 6 seconds
+let restartTime = 10000; // 10 seconds
 let simulationEnded = false;
 let endTime = 0;
-let horizontalDelay = 2000; // 800 milliseconds delay for horizontal alignment with P4
+let horizontalDelay = 2000; // 2000 milliseconds delay for horizontal alignment with P4
 let finalNode = null; // To store the final node
 let isPlaying = true; // To track if the simulation is playing
 let speedFactor = 5; // Default speed factor
 
 const voteColors = {
-  100: 'red',    // R1, S1, T1
-  250: 'green',  // R2, S2, T2
-  400: 'blue',   // R3, S3, T3
-  550: 'orange'  // R4, S4, T4
+  100: '#ff9aa2',    // Pastel red
+  250: '#ffb7b2',    // Pastel orange
+  400: '#ffdac1',    // Pastel yellow
+  550: '#e2f0cb'     // Pastel green
 };
 
 class Node {
@@ -25,15 +25,18 @@ class Node {
     this.y = y;
     this.label = label;
     this.sent = false;
-    this.stage = 0; // Les nœuds sont toujours au stage 0
+    this.stage = 0; // Nodes are always at stage 0
     this.startDelay = startDelay;
     this.startTime = millis();
   }
 
   draw() {
-    fill(0);
+    fill('#c06c84');
+    stroke('#c06c84');
+    strokeWeight(2);
     ellipse(this.x, this.y, 50, 50);
-    fill(255);
+    fill('#ffffff'); // White color for text
+    noStroke();
     textAlign(CENTER, CENTER);
     text(this.label, this.x, this.y);
   }
@@ -44,7 +47,7 @@ class Node {
         if (point.stage === 1 && this.y !== point.y) {
           let trait = new Trait(this.x, this.y, point.x, point.y, 0, 'blue');
           
-          // Ajouter un délai si aligné horizontalement avec P4
+          // Add delay if horizontally aligned with P4
           if (this.y === 550) {
             setTimeout(() => traits.push(trait), horizontalDelay);
           } else {
@@ -58,24 +61,20 @@ class Node {
 }
 
 class Point {
-  constructor(x, y, label, stage) {
+  constructor(x, y, stage) {
     this.x = x;
     this.y = y;
-    this.label = label;
     this.received = 0;
     this.stage = stage;
     this.sent = false;
-    this.color = 'black'; // Default color for circles
+    this.color = '#355c7d'; // Default pastel color for points
   }
 
   draw() {
     stroke(this.color);
-    fill(255);
-    ellipse(this.x, this.y, 50, 50);
-    fill(0);
-    noStroke();
-    textAlign(CENTER, CENTER);
-    text(this.label, this.x, this.y);
+    strokeWeight(10);
+    fill(this.color);
+    ellipse(this.x, this.y, 20, 20);
   }
 
   sendTraits() {
@@ -86,7 +85,7 @@ class Point {
         if (this.stage + 1 === point.stage && this.y !== point.y) {
           let trait = new Trait(this.x, this.y, point.x, point.y, 0, 'blue');
           
-          // Ajouter un délai si aligné horizontalement avec P4
+          // Add delay if horizontally aligned with P4
           if (this.y === 550) {
             setTimeout(() => traits.push(trait), horizontalDelay);
           } else {
@@ -120,7 +119,7 @@ class Trait {
 
   draw() {
     stroke(this.color);
-    strokeWeight(1);
+    strokeWeight(3);
     line(this.startX, this.startY, lerp(this.startX, this.endX, this.stepProgress), lerp(this.startY, this.endY, this.stepProgress));
     if (!this.arrived) {
       this.stepProgress += (1 / totalSteps) * (speedFactor / 5);
@@ -141,7 +140,7 @@ class Trait {
       }
     } else {
       stroke(this.color);
-      strokeWeight(1);
+      strokeWeight(3);
       line(this.startX, this.startY, this.endX, this.endY);
     }
   }
@@ -163,7 +162,7 @@ function setup() {
 
 function draw() {
   if (isPlaying) {
-    background(255);
+    background(255, 255, 255, 50); // Semi-transparent background for trailing effect
     drawTimeStages();
     drawPoints();
 
@@ -193,7 +192,8 @@ function draw() {
       // Draw the final node
       fill('green');
       ellipse(finalNode.x, finalNode.y, 50, 50);
-      fill(255);
+      fill('#ffffff'); // White color for text
+      noStroke();
       textAlign(CENTER, CENTER);
       text(finalNode.label, finalNode.x, finalNode.y);
 
@@ -207,7 +207,7 @@ function draw() {
 }
 
 function drawTimeStages() {
-  stroke('green');
+  stroke('#c06c84');
   strokeWeight(2);
   for (let i = 1; i < stages.length; i++) {
     let x = i * stageWidth;
@@ -217,7 +217,7 @@ function drawTimeStages() {
   }
 
   // Draw stage labels
-  fill(0);
+  fill('#355c7d');
   noStroke();
   textAlign(CENTER, CENTER);
   for (let i = 0; i < stages.length; i++) {
@@ -227,13 +227,10 @@ function drawTimeStages() {
 }
 
 function drawPoints() {
-  fill(0);
   noStroke();
   for (let point of points) {
-    for (let i = 1; i < stages.length; i++) {
-      let x = i * stageWidth + stageWidth / 2;
-      ellipse(x, point.y, 10, 10);
-    }
+    fill(point.color);
+    ellipse(point.x, point.y, 20, 20);
   }
 }
 
@@ -246,32 +243,32 @@ function initializeNodesAndPoints() {
   nodes.push(new Node(stageWidth / 2, 100, 'P1', 0));
   nodes.push(new Node(stageWidth / 2, 250, 'P2', 0));
   nodes.push(new Node(stageWidth / 2, 400, 'P3', 0));
-  nodes.push(new Node(stageWidth / 2, 550, 'P4', 2000)); // Adding a delay of 3000 milliseconds for P4
+  nodes.push(new Node(stageWidth / 2, 550, 'P4', 2000)); // Adding a delay of 2000 milliseconds for P4
 
-  points.push(new Point(stageWidth * 1.5, 100, 'Q1', 1));
-  points.push(new Point(stageWidth * 1.5, 250, 'Q2', 1));
-  points.push(new Point(stageWidth * 1.5, 400, 'Q3', 1));
-  points.push(new Point(stageWidth * 1.5, 550, 'Q4', 1));
+  points.push(new Point(stageWidth * 1.5, 100, 1));
+  points.push(new Point(stageWidth * 1.5, 250, 1));
+  points.push(new Point(stageWidth * 1.5, 400, 1));
+  points.push(new Point(stageWidth * 1.5, 550, 1));
 
-  points.push(new Point(stageWidth * 2.5, 100, 'R1', 2));
-  points.push(new Point(stageWidth * 2.5, 250, 'R2', 2));
-  points.push(new Point(stageWidth * 2.5, 400, 'R3', 2));
-  points.push(new Point(stageWidth * 2.5, 550, 'R4', 2));
+  points.push(new Point(stageWidth * 2.5, 100, 2));
+  points.push(new Point(stageWidth * 2.5, 250, 2));
+  points.push(new Point(stageWidth * 2.5, 400, 2));
+  points.push(new Point(stageWidth * 2.5, 550, 2));
 
-  points.push(new Point(stageWidth * 3.5, 100, 'S1', 3));
-  points.push(new Point(stageWidth * 3.5, 250, 'S2', 3));
-  points.push(new Point(stageWidth * 3.5, 400, 'S3', 3));
-  points.push(new Point(stageWidth * 3.5, 550, 'S4', 3));
+  points.push(new Point(stageWidth * 3.5, 100, 3));
+  points.push(new Point(stageWidth * 3.5, 250, 3));
+  points.push(new Point(stageWidth * 3.5, 400, 3));
+  points.push(new Point(stageWidth * 3.5, 550, 3));
 
-  points.push(new Point(stageWidth * 4.5, 100, 'T1', 4));
-  points.push(new Point(stageWidth * 4.5, 250, 'T2', 4));
-  points.push(new Point(stageWidth * 4.5, 400, 'T3', 4));
-  points.push(new Point(stageWidth * 4.5, 550, 'T4', 4));
+  points.push(new Point(stageWidth * 4.5, 100, 4));
+  points.push(new Point(stageWidth * 4.5, 250, 4));
+  points.push(new Point(stageWidth * 4.5, 400, 4));
+  points.push(new Point(stageWidth * 4.5, 550, 4));
 
-  points.push(new Point(stageWidth * 5.5, 100, 'U1', 5));
-  points.push(new Point(stageWidth * 5.5, 250, 'U2', 5));
-  points.push(new Point(stageWidth * 5.5, 400, 'U3', 5));
-  points.push(new Point(stageWidth * 5.5, 550, 'U4', 5));
+  points.push(new Point(stageWidth * 5.5, 100, 5));
+  points.push(new Point(stageWidth * 5.5, 250, 5));
+  points.push(new Point(stageWidth * 5.5, 400, 5));
+  points.push(new Point(stageWidth * 5.5, 550, 5));
 }
 
 function checkElectionStageCompleted() {
