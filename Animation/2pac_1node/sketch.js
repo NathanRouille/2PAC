@@ -2,31 +2,29 @@ let nodes = [];
 let points = [];
 let stages = ['Nodes', 'Block 1', 'Vote 1', 'Block 2', 'Vote 2', 'Election'];
 let stageWidth;
-let totalSteps = 120; // Number of frames to complete one stage, doublé pour une propagation plus lente
+let totalSteps = 120; // Number of frames to complete one stage, increased for slower propagation
 let traits = [];
 let restartTime = 6000; // 6 seconds
 let simulationEnded = false;
 let endTime = 0;
 
 const voteColors = {
-  'qc': 'red',    // R1, S1, T1
-  'vote': 'green',  // R2, S2, T2
-  'block': 'blue',   // R3, S3, T3
-  'coinshare': 'orange'  // R4, S4, T4
+  'qc': '#FFA07A',       // Light Salmon
+  'vote': '#98FB98',     // Pale Green
+  'block': '#ADD8E6',    // Light Blue
+  'coinshare': '#FFD700' // Gold
 };
 
-console.log(voteColors['qc']);
-
 class Node {
-  constructor(x, y, label, startDelay,type) {
+  constructor(x, y, label, startDelay, type) {
     this.x = x;
     this.y = y;
     this.label = label;
     this.sent = false;
-    this.stage = 0; // Les nœuds sont toujours au stage 0
+    this.stage = 0; // Nodes are always at stage 0
     this.startDelay = startDelay;
     this.startTime = millis();
-    this.type = type
+    this.type = type;
   }
 
   draw() {
@@ -41,7 +39,6 @@ class Node {
     if (!this.sent && millis() - this.startTime >= this.startDelay) {
       for (let point of points) {
         if (point.stage === 1 && this.y !== point.y) {
-          console.log(this.type)
           let trait = new Trait(this.x, this.y, point.x, point.y, 0, voteColors[this.type]);
           traits.push(trait);
         }
@@ -52,25 +49,20 @@ class Node {
 }
 
 class Point {
-  constructor(x, y, label, stage,type) {
+  constructor(x, y, stage, type) {
     this.x = x;
     this.y = y;
-    this.label = label;
     this.received = 0;
     this.stage = stage;
     this.sent = false;
-    this.color = 'black'; // Default color for circles
-    this.type = type
+    this.color = voteColors[type]; // Use vote type color
+    this.type = type;
   }
 
   draw() {
-    stroke(this.color);
-    fill(255);
-    ellipse(this.x, this.y, 50, 50);
-    fill(0);
     noStroke();
-    textAlign(CENTER, CENTER);
-    text(this.label, this.x, this.y);
+    fill(this.color);
+    ellipse(this.x, this.y, 30, 30); // Increased size for points
   }
 
   sendTraits() {
@@ -88,10 +80,6 @@ class Point {
   }
 
   receiveTrait(trait) {
-/*     if (this.stage === 2 || this.stage === 4) { // Change color for Vote 1 and Vote 2 stages
-      this.color = voteColors[this.type] || 'blue';
-      trait.color = this.color;
-    } */
     this.received++;
   }
 }
@@ -105,12 +93,12 @@ class Trait {
     this.stepProgress = stepProgress;
     this.color = color;
     this.arrived = false;
-    this.speed = Math.random()*1 + 1; // Random speed between 1 and 3
+    this.speed = Math.random() * 1 + 1; // Random speed between 1 and 2
   }
 
   draw() {
+    strokeWeight(3); // Increased stroke weight for traits
     stroke(this.color);
-    strokeWeight(1);
     line(this.startX, this.startY, lerp(this.startX, this.endX, this.stepProgress), lerp(this.startY, this.endY, this.stepProgress));
     if (!this.arrived) {
       this.stepProgress += this.speed / (totalSteps * 3);
@@ -127,15 +115,7 @@ class Trait {
           endTime = millis();
         }
       }
-    } else {
-      stroke(this.color);
-      strokeWeight(1);
-      line(this.startX, this.startY, this.endX, this.endY);
     }
-  }
-
-  checkArrival() {
-    return this.arrived;
   }
 }
 
@@ -193,23 +173,10 @@ function drawTimeStages() {
 }
 
 function drawPoints() {
-  fill(0);
-  noStroke();
   for (let point of points) {
-    for (let i = 1; i < stages.length; i++) {
-      let x = i * stageWidth + stageWidth / 2;
-      ellipse(x, point.y, 10, 10);
-    }
+    point.draw();
   }
 }
-
-function removeTraitsBetweenPoints(startPoint, endPoint) {
-  // Filtrer les traits qui ne commencent pas ou ne se terminent pas aux points spécifiés
-  traits = traits.filter(trait => {
-    return !(trait.startX === startPoint.x && trait.startY === startPoint.y && trait.endX === endPoint.x && trait.endY === endPoint.y);
-  });
-}
-
 
 function initializeNodesAndPoints() {
   nodes = [];
@@ -217,35 +184,30 @@ function initializeNodesAndPoints() {
   traits = [];
   simulationEnded = false;
 
-  nodes.push(new Node(stageWidth / 2, 100, 'P1', 0,'block'));
-  /* nodes.push(new Node(stageWidth / 2, 250, 'P2', 0));
-  nodes.push(new Node(stageWidth / 2, 400, 'P3', 0));
-  nodes.push(new Node(stageWidth / 2, 550, 'P4', 0)); // Adding a delay of 3000 milliseconds for P4 */
+  nodes.push(new Node(stageWidth / 2, 100, 'P1', 0, 'block'));
 
-  points.push(new Point(stageWidth * 1.5, 100, 'Q1', 1,'vote'));
-  points.push(new Point(stageWidth * 1.5, 250, 'Q2', 1,'vote'));
-  points.push(new Point(stageWidth * 1.5, 400, 'Q3', 1,'vote'));
-  points.push(new Point(stageWidth * 1.5, 550, 'Q4', 1,'vote'));
+  points.push(new Point(stageWidth * 1.5, 100, 1, 'vote'));
+  points.push(new Point(stageWidth * 1.5, 250, 1, 'vote'));
+  points.push(new Point(stageWidth * 1.5, 400, 1, 'vote'));
+  points.push(new Point(stageWidth * 1.5, 550, 1, 'vote'));
 
-  points.push(new Point(stageWidth * 2.5, 100, 'R1', 2,'block'));
-  points.push(new Point(stageWidth * 2.5, 250, 'R2', 2,'block'));
-  points.push(new Point(stageWidth * 2.5, 400, 'R3', 2,'block'));
-  points.push(new Point(stageWidth * 2.5, 550, 'R4', 2,'block'));
+  points.push(new Point(stageWidth * 2.5, 100, 2, 'block'));
+  points.push(new Point(stageWidth * 2.5, 250, 2, 'block'));
+  points.push(new Point(stageWidth * 2.5, 400, 2, 'block'));
+  points.push(new Point(stageWidth * 2.5, 550, 2, 'block'));
 
-  points.push(new Point(stageWidth * 3.5, 100, 'S1', 3,'qc'));
-  points.push(new Point(stageWidth * 3.5, 250, 'S2', 3,'qc'));
-  points.push(new Point(stageWidth * 3.5, 400, 'S3', 3,'qc'));
-  points.push(new Point(stageWidth * 3.5, 550, 'S4', 3,'qc'));
+  points.push(new Point(stageWidth * 3.5, 100, 3, 'qc'));
+  points.push(new Point(stageWidth * 3.5, 250, 3, 'qc'));
+  points.push(new Point(stageWidth * 3.5, 400, 3, 'qc'));
+  points.push(new Point(stageWidth * 3.5, 550, 3, 'qc'));
 
-  points.push(new Point(stageWidth * 4.5, 100, 'T1', 4,'vote'));
-  points.push(new Point(stageWidth * 4.5, 250, 'T2', 4,'vote'));
-  points.push(new Point(stageWidth * 4.5, 400, 'T3', 4,'vote'));
-  points.push(new Point(stageWidth * 4.5, 550, 'T4', 4,'vote'));
+  points.push(new Point(stageWidth * 4.5, 100, 4, 'vote'));
+  points.push(new Point(stageWidth * 4.5, 250, 4, 'vote'));
+  points.push(new Point(stageWidth * 4.5, 400, 4, 'vote'));
+  points.push(new Point(stageWidth * 4.5, 550, 4, 'vote'));
 
-  points.push(new Point(stageWidth * 5.5, 100, 'U1', 5, 'coinshare'));
-  points.push(new Point(stageWidth * 5.5, 250, 'U2', 5, 'coinshare'));
-  points.push(new Point(stageWidth * 5.5, 400, 'U3', 5, 'coinshare'));
-  points.push(new Point(stageWidth * 5.5, 550, 'U4', 5, 'coinshare'));
-
-
+  points.push(new Point(stageWidth * 5.5, 100, 5, 'coinshare'));
+  points.push(new Point(stageWidth * 5.5, 250, 5, 'coinshare'));
+  points.push(new Point(stageWidth * 5.5, 400, 5, 'coinshare'));
+  points.push(new Point(stageWidth * 5.5, 550, 5, 'coinshare'));
 }
