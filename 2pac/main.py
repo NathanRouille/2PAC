@@ -61,7 +61,6 @@ if __name__ == "__main__":
     start_time = time.time()
     Nodes = setup_nodes(start_time)
     coms = start_coms(Nodes)
-    print("Nodes and coms setup")
     threads = [
         threading.Thread(target=Nodes[0].handleMsgLoop),
         threading.Thread(target=Nodes[1].handleMsgLoop),
