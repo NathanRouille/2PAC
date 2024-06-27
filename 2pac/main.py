@@ -20,8 +20,6 @@ block3 = Block1(3)
 block4 = Block1(4)
 
 
-vote = Vote2(0,1)
-
 def setup_nodes(start_time):
     seed = random.randint(1,1000) #on génère une seed random pour avoir un qccoin déterministe identique pour chaque Node mais qui change à chaque exécution
     privatekey4, publickey4 = Sign.generate_keypair()
