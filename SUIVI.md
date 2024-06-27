@@ -79,10 +79,14 @@
 >(Nathan) Continue à lire le papier de 2PAC et à le résumer  
 
 >>Séance 12/06  
->(Natha,Rayane) Réunion avec M. Rambaud. Echange avec les autres groupes et révision des objectifs  
+>(Nathan,Rayane) Réunion avec M. Rambaud. Echange avec les autres groupes et révision des objectifs  
+>(Adam) Travail bibliographique sur 2-chain-VABA et 2PAC
 
 >>Séance 24/06
-
+>(Adam) Implémentation de fonctions utilitaires pour le consensus GradedDag en Rust.
 >>Séance 25/06
-
+>(Adam) Suite de l'imlémentation en Rust de GradedDag, discussion avec M.Rambaud et décision d'une nouvelle stratégie en groupe.
 >>Séance 26/06
+>(Adam) Travail sur une animation du consensus 2PAC en JavaScript (avec p5.js). 
+>>>Séance 27/06
+>(Adam) Travail sur deux nouvelles animations du consensus 2PAC (avec des décalages et de l'asynchronie).
