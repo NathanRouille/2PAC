@@ -14,7 +14,7 @@ random.seed(7777)
 
 
 class Node:
-    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool):
+    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool,start_time):
 
         # attributs propres au Node
         self.id = id #de 1 à 4
@@ -52,7 +52,7 @@ class Node:
         self.nodeNum = 4
         self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)
 
-        self.starter_time = time.time()
+        self.starter_time = start_time
 
         self.flag_vote1 = False
         self.flag_vote2 = False
@@ -60,6 +60,8 @@ class Node:
         self.flag_block1 = False
         self.flag_block2 = False
         self.flag_leader = False
+
+        self.times = {}
 
         #attributs de test de performances
         #self.evaluation = []
@@ -76,37 +78,49 @@ class Node:
 
         if function_name == "handleBlock1Msg":
             if not self.flag_block1:
-                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {time.time()-self.starter_time}s")
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['block1'] = delta
                 self.flag_block1 = True
             else:
                 pass
         elif function_name == "handleBlock2Msg":
             if not self.flag_block2:
-                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {time.time()-self.starter_time}s")
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['block2'] = delta
                 self.flag_block2 = True
             else:
                 pass
         elif function_name == "handleVote2Msg":
             if not self.flag_vote2:
-                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {time.time()-self.starter_time}s")
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['vote2'] = delta
                 self.flag_vote2 = True
             else:
                 pass
         elif function_name == "handleVote1Msg":
             if not self.flag_vote1:
-                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {time.time()-self.starter_time}s")
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['vote1'] = delta
                 self.flag_vote1 = True
             else:
                 pass 
         elif function_name == "handleElectMsg":
             if not self.flag_elect:
-                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {time.time()-self.starter_time}s")
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['elect'] = delta                
                 self.flag_elect = True
             else:
                 pass
         elif function_name == "handleLeaderMsg":
             if not self.flag_leader:
-                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {time.time()-self.starter_time}s")
+                delta = time.time()-self.starter_time
+                print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+                self.times['leader'] = delta               
                 self.flag_leader = True
             else:
                 pass
@@ -240,6 +254,7 @@ class Node:
     def storeVote2Msg(self, vote2: Vote2):
         self.logger()
         self.qc2.append(vote2.sender)
+        #print(f"qc2 : {self.qc2} pour id= {self.id}")
         #self.moveRound += 1 #toujours besoin de ça ?
 
     def storeElectMsg(self, elect: Elect):

@@ -152,7 +152,7 @@ class Node:
         print(f"handleLeaderMsg de id= {self.id}")
         with self.lock:
             if not self.leader:
-                print(f"Commit pour id= {self.id}")
+                print(f"Commit arpès reception d'un message leader pour id= {self.id}")
                 self.leader = leader.id_leader
                 self.tryToCommit()
     
@@ -170,6 +170,7 @@ class Node:
 
     def storeVote2Msg(self, vote2: Vote2):
         self.qc2.append(vote2.sender)
+        print(f"qc2 : {self.qc2} pour id= {self.id}")
         #self.moveRound += 1 #toujours besoin de ça ?
 
     def storeElectMsg(self, elect: Elect):

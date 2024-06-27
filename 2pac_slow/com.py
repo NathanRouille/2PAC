@@ -100,7 +100,7 @@ class Com:
             for peer in self.peers:
                 self.send_message(message, peer)
         else:
-            delaying_thread = threading.Thread(target=self.wait, args=(message,1,))
+            delaying_thread = threading.Thread(target=self.wait, args=(message,4,))
             delaying_thread.start()
 
 
