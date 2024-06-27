@@ -83,7 +83,6 @@ class Node:
             
             elif msg_type == 'Block2':
                 #print(f"msgAsserted de Block2 : {msgAsserted} pour id= {self.id}")
-                #print(f"Bla self.blocks1 : {self.blocks1}")
                 block2=Block2(msgAsserted["sender"],msgAsserted["qc"])
                 threading.Thread(target=self.handleBlock2Msg, args=(block2,)).start()
             
@@ -97,7 +96,7 @@ class Node:
                 elect=Elect(msgAsserted["sender"])
                 threading.Thread(target=self.handleElectMsg, args=(elect,)).start()
             elif msg_type == 'Leader':
-                print(f"msgAsserted de Leader : {msgAsserted} pour id= {self.id}")
+                #print(f"msgAsserted de Leader : {msgAsserted} pour id= {self.id}")
                 leader=Leader(msgAsserted["sender"],msgAsserted["id_leader"])
                 threading.Thread(target=self.handleLeaderMsg, args=(leader,)).start()
             
@@ -123,7 +122,6 @@ class Node:
     def handleBlock2Msg(self, block2: Block2):#vérifier le qc ?
         print(f"handleBlock2Msg de id= {self.id}")
         if block2.sender not in self.blocks2:
-            #print(f"OK pour id= {self.id}")
             with self.lock:
                 self.storeBlock2Msg(block2)
             threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
@@ -189,12 +187,8 @@ class Node:
                     threading.Thread(target=self.broadcastBlock2, args=(self.qc1,)).start()
 
         elif type(msg) == Vote2:
-            """ if len(self.qc2) >= self.quorumNum:
-                threading.Thread(target=self.broadcastElect).start() """
-
             with self.lock:
                 if len(self.qc2) >= self.quorumNum:
-                    
                     self.coinshare.append(True) ####A modifier###
                     self.sentCoinShare = True
                     threading.Thread(target=self.broadcastElect, args=()).start()
