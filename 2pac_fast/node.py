@@ -45,8 +45,6 @@ class Node:
         self.elect = {}
         self.leader = 0 #leader par défaut 0
         self.chain = []
-        
-        self.moveRound = 0 #à enlever / adapter pour views
 
         #attributs propres au réseau de Nodes
         self.qccoin = random.randint(1, 5)
