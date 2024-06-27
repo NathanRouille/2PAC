@@ -73,4 +73,4 @@ class Leader:
     def __init__(self, sender,id_leader):
         self.sender = sender
         self.id_leader = id_leader
-        #on pouurrat rajouter block1 qc1 et qc2 du leader si on les a 
+        #on pourrait rajouter block1 qc1 et qc2 du leader si on les a pour accélerer les commit
