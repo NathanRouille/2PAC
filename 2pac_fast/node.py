@@ -192,7 +192,7 @@ class Node:
         ''' Fonction pour gérer les messages de type Vote1 puis check du Quorum'''
         self.logger()
         with self.lock:
-            if vote1.sender not in self.qc1[vote1.block_sender]:
+            if vote1.block_sender in self.qc1 and vote1.sender not in self.qc1[vote1.block_sender]:
                 self.storeVote1Msg(vote1)
                 self.checkIfQuorum(vote1)
                 self.tryToCommit()
@@ -203,7 +203,7 @@ class Node:
         if block2.sender not in self.blocks2:
             with self.lock:
                 self.storeBlock2Msg(block2)
-            if len(self.qc1[block2.sender]) >= self.quorumNum:
+            if block2.sender in self.qc1 and len(self.qc1[block2.sender]) >= self.quorumNum:
                 #alors send vote2 (et edit la variable de vote2 attention à l'accès simultané des threads avec lock)
                 threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
                 self.tryToCommit()
@@ -212,7 +212,7 @@ class Node:
         ''' Fonction pour gérer les messages de type Vote2 puis check du Quorum'''
         self.logger()
         with self.lock:
-            if vote2.sender not in self.qc2[vote2.block_sender]:   #not self.sentCoinShare and 
+            if vote2.block_sender in self.qc2 and vote2.sender not in self.qc2[vote2.block_sender]:   #not self.sentCoinShare and 
                 self.storeVote2Msg(vote2)
                 self.checkIfQuorum(vote2)
                 self.tryToCommit()
@@ -252,6 +252,8 @@ class Node:
     def storeBlock2Msg(self, block2: Block2): 
         self.logger()
         self.blocks2[block2.sender] = block2
+        if block2.sender not in self.qc1: #au cas où on reçoit un block2 étendant un block1 avant d'avoir reçu le moindre vote1 sur ce block1, on initialise le qc1 pour ce proposeur
+            self.qc1[block2.sender] = []
         if block2.qc != None and len(self.qc1[block2.sender]) < self.quorumNum: #on suppose que la vérification de la validité de block2.qc a été faite
             self.qc1[block2.sender] = copy.deepcopy(block2.qc)
 
@@ -275,7 +277,7 @@ class Node:
                     if msg.block_sender == self.id: #et pas déjà envoyé de block2 (attention threads)
                         self.block2.append(True) ####A modifier###
                         self.sentBlock2 = True
-                        threading.Thread(target=self.broadcastBlock2, args=(self.qc1,)).start()
+                        threading.Thread(target=self.broadcastBlock2, args=(self.qc1[self.id],)).start()
                     elif msg.block_sender in self.blocks2: #et si pas encore voté pour le Block2 
                         #alors send vote2 (et edit la variable de vote2 attention à l'accès simultané des threads avec lock)
                         #threading.Thread(target=self.broadcastVote2, args=(msg.block_sender,)).start()
@@ -286,8 +288,6 @@ class Node:
                     self.coinshare.append(True) ####A modifier###
                     self.sentCoinShare = True
                     threading.Thread(target=self.broadcastElect, args=()).start()
-                """ if len(self.qc2) >= self.quorumNum:
-                threading.Thread(target=self.broadcastElect).start() """
 
         elif type(msg) == Elect:
             with self.lock:
@@ -302,7 +302,7 @@ class Node:
         self.logger()
         if not self.leader or self.leader not in self.qc1 or self.leader not in self.qc2:
             return
-        if len(self.qc1[self.leader]) >= self.quorumNum and len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks1:
+        elif len(self.qc1[self.leader]) >= self.quorumNum and len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks1:
             leader_block = self.blocks1[self.leader]
             self.chain.append(leader_block)
             print(f"Chain {self.chain[0].sender} pour id= {self.id}")
