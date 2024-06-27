@@ -29,8 +29,8 @@ class Node:
         self.com=Com(self.id,self.port,self.peers,self.delay)
 
         #attributs pour stocker les blocks et coinshare du Node
-        self.sentBlock1 = False
         self.sentBlock2 = False
+        self.sentVote2 = []
         self.sentCoinShare = False
 
         self.block1 = [] #ajouter Block1 à blocks1 plutôt
@@ -202,7 +202,7 @@ class Node:
             with self.lock:
                 self.storeBlock2Msg(block2)
             if block2.sender in self.qc1 and len(self.qc1[block2.sender]) >= self.quorumNum:
-                #alors send vote2 (et edit la variable de vote2 attention à l'accès simultané des threads avec lock)
+                self.sentVote2.append(block2.sender)
                 threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
                 self.tryToCommit()
 
@@ -272,12 +272,11 @@ class Node:
         if type(msg) == Vote1:
             with self.lock:
                 if len(self.qc1[msg.block_sender]) >= self.quorumNum:
-                    if msg.block_sender == self.id: #et pas déjà envoyé de block2 (attention threads)
-                        self.block2.append(True) ####A modifier###
+                    if msg.block_sender == self.id and not self.sentBlock2:
                         self.sentBlock2 = True
                         threading.Thread(target=self.broadcastBlock2, args=(self.qc1[self.id],)).start()
-                    elif msg.block_sender in self.blocks2: #et si pas encore voté pour le Block2 
-                        #alors send vote2 (et edit la variable de vote2 attention à l'accès simultané des threads avec lock)
+                    elif msg.block_sender in self.blocks2 and msg.block_sender not in self.sentVote2: 
+                        self.sentVote2.append(msg.block_sender)
                         threading.Thread(target=self.broadcastVote2, args=(msg.block_sender,)).start()
                         
         elif type(msg) == Vote2:
