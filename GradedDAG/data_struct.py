@@ -11,26 +11,6 @@ class Block:
             'sender': self.sender
         })
 
-class Block1(Block):
-    def __init__(self, sender):
-        super().__init__(sender)
-
-    def to_json(self):
-        return json.dumps({
-            'sender': self.sender
-        })
-
-
-class Block2(Block):
-    def __init__(self, sender, qc):
-        super().__init__(sender)
-        self.qc = qc #qc peut valoir None, comme on est que sur une seule view on considère toujours que le Block2 d'un replica extend le Block1 de ce même replica
-    
-    def to_json(self):
-        return json.dumps({
-            'sender': self.sender,
-            'QC': self.qc
-        })
 
 class Vote:
     def __init__(self, vote_sender):
@@ -42,7 +22,7 @@ class Vote:
         })
 
 
-class Vote1(Vote):
+class Echo(Vote):
     def __init__(self, vote_sender, block_sender):
         super().__init__(vote_sender)
         self.block_sender = block_sender
@@ -53,15 +33,15 @@ class Vote1(Vote):
             'Block_sender': self.block_sender
         })
 
-class Vote2(Vote):
-    def __init__(self, vote_sender, qc_sender):
+class Ready(Vote):
+    def __init__(self, vote_sender, block_sender):
         super().__init__(vote_sender)
-        self.qc_sender = qc_sender
+        self.block_sender = block_sender
 
     def to_json(self):
         return json.dumps({
             'sender': self.sender,
-            'qc_sender': self.qc_sender
+            'qc_sender': self.block_sender
         })
     
 class Elect:

@@ -29,7 +29,7 @@ class Node:
 
         #attributs pour stocker les blocks et coinshare du Node
         self.sentBlock2 = False
-        self.sentVote2 = []
+        self.sentReady = []
         self.sentCoinShare = False
 
         
@@ -51,13 +51,12 @@ class Node:
         #logger
         self.starter_time = start_time
 
-        self.datas_block1 = {1: None, 2: None, 3: None, 4: None}
-        self.datas_vote1 = {"block 1": {1: None, 2: None, 3: None, 4: None}, "block 2": {1: None, 2: None, 3: None, 4: None}, "block 3": {1: None, 2: None, 3: None, 4: None}, "block 4": {1: None, 2: None, 3: None, 4: None}}
-        self.datas_block2 = {1: None, 2: None, 3: None, 4: None, "qc1":self.qc1}
-        self.datas_vote2 = {"qc sender 1": {1: None, 2: None, 3: None, 4: None}, "qc sender 2": {1: None, 2: None, 3: None, 4: None}, "qc sender 3": {1: None, 2: None, 3: None, 4: None}, "qc sender 4": {1: None, 2: None, 3: None, 4: None}}
+        self.datas_block = {1: None, 2: None, 3: None, 4: None}
+        self.datas_echo = {"block 1": {1: None, 2: None, 3: None, 4: None}, "block 2": {1: None, 2: None, 3: None, 4: None}, "block 3": {1: None, 2: None, 3: None, 4: None}, "block 4": {1: None, 2: None, 3: None, 4: None}}
+        self.datas_ready = {"qc sender 1": {1: None, 2: None, 3: None, 4: None}, "qc sender 2": {1: None, 2: None, 3: None, 4: None}, "qc sender 3": {1: None, 2: None, 3: None, 4: None}, "qc sender 4": {1: None, 2: None, 3: None, 4: None}}
         self.datas_elect = {1: None, 2: None, 3: None, 4: None}
         self.datas_leader = {1: None, 2: None, 3: None, 4: None, "id leader": 0}
-        self.log_data={'Receptions Block1':{},'Receptions Vote1':{},'Receptions Block2':{},'Receptions Vote2':{},'Receptions Elect':{},'Receptions Leader':{},'Commit': None}
+        self.log_data={'Receptions Block':{},'Receptions Echo':{},'Receptions Block2':{},'Receptions Ready':{},'Receptions Elect':{},'Receptions Leader':{},'Commit': None}
 
         #fichier log
         self.log_file_path = os.path.join('log', f'node_{self.id}.json')
@@ -81,21 +80,21 @@ class Node:
             if not verify_signed(msg_signature): #on vérifie la signature du message
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
-            if msg_type == 'Block1':
-                block1=Block1(msgAsserted["sender"])
-                threading.Thread(target=self.handleBlock1Msg, args=(block1,)).start()
+            if msg_type == 'Block':
+                block=Block(msgAsserted["sender"])
+                threading.Thread(target=self.handleBlockMsg, args=(block,)).start()
             
-            elif msg_type == 'Vote1':
-                vote1=Vote1(msgAsserted["sender"],msgAsserted["Block_sender"])
-                threading.Thread(target=self.handleVote1Msg, args=(vote1,)).start()
+            elif msg_type == 'Echo':
+                echo=Echo(msgAsserted["sender"],msgAsserted["Block_sender"])
+                threading.Thread(target=self.handleEchoMsg, args=(echo,)).start()
             
             elif msg_type == 'Block2':
                 block2=Block2(msgAsserted["sender"],msgAsserted["qc"])
                 threading.Thread(target=self.handleBlock2Msg, args=(block2,)).start()
             
-            elif msg_type == 'Vote2':
-                vote2=Vote2(msgAsserted["sender"],msgAsserted["QC_sender"])
-                threading.Thread(target=self.handleVote2Msg, args=(vote2,)).start()
+            elif msg_type == 'Ready':
+                ready=Ready(msgAsserted["sender"],msgAsserted["QC_sender"])
+                threading.Thread(target=self.handleReadyMsg, args=(ready,)).start()
             
             elif msg_type == 'Elect':
                 elect=Elect(msgAsserted["sender"])
@@ -107,53 +106,53 @@ class Node:
 
 #############       Handle Messages       #############
 #########################################################
-    def handleBlock1Msg(self, block1: Block1):
-        ''' Fonction pour gérer les messages de type Block1 puis broadcast d'un message de type Vote1'''
-        self.logger(block1)
-        if block1.sender not in self.blocks1:
+    def handleBlockMsg(self, block: Block):
+        ''' Fonction pour gérer les messages de type Block puis broadcast d'un message de type Echo'''
+        self.logger(block)
+        if block.sender not in self.blocks:
             with self.lock:
-                self.storeBlock1Msg(block1)
-            if block1.sender not in self.qc1:
-                self.qc1[block1.sender] = []
-            self.qc1[block1.sender].append(self.id)
-            threading.Thread(target=self.broadcastVote1, args=(block1.sender,)).start()
+                self.storeBlockMsg(block)
+            if block.sender not in self.qc1:
+                self.qc1[block.sender] = []
+            self.qc1[block.sender].append(self.id)
+            threading.Thread(target=self.broadcastEcho, args=(block.sender,)).start()
             self.tryToCommit()
     
 
-    def handleVote1Msg(self, vote1: Vote1):
-        ''' Fonction pour gérer les messages de type Vote1 puis check du Quorum'''
-        self.logger(vote1)
+    def handleEchoMsg(self, echo: Echo):
+        ''' Fonction pour gérer les messages de type Echo puis check du Quorum'''
+        self.logger(echo)
         with self.lock:
-            if vote1.block_sender not in self.qc1:
-                self.qc1[vote1.block_sender] = []
-            if vote1.sender not in self.qc1[vote1.block_sender]:
-                self.storeVote1Msg(vote1)
-                self.checkIfQuorum(vote1)
+            if echo.block_sender not in self.qc1:
+                self.qc1[echo.block_sender] = []
+            if echo.sender not in self.qc1[echo.block_sender]:
+                self.storeEchoMsg(echo)
+                self.checkIfQuorum(echo)
                 self.tryToCommit()
 
     def handleBlock2Msg(self, block2: Block2):#vérifier le qc ?
-        ''' Fonction pour gérer les messages de type Block2 puis broadcast d'un message de type Vote2'''
+        ''' Fonction pour gérer les messages de type Block2 puis broadcast d'un message de type Ready'''
         self.logger(block2)
         if block2.sender not in self.blocks2:
             with self.lock:
                 self.storeBlock2Msg(block2)
             if block2.sender in self.qc1 and len(self.qc1[block2.sender]) >= self.quorumNum:
-                self.sentVote2.append(block2.sender)
+                self.sentReady.append(block2.sender)
                 if block2.sender not in self.qc2:
                     self.qc2[block2.sender] = []
                 self.qc2[block2.sender].append(self.id)
-                threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
+                threading.Thread(target=self.broadcastReady, args=(block2.sender,)).start()
                 self.tryToCommit()
 
-    def handleVote2Msg(self, vote2: Vote2):
-        ''' Fonction pour gérer les messages de type Vote2 puis check du Quorum'''
-        self.logger(vote2)
+    def handleReadyMsg(self, ready: Ready):
+        ''' Fonction pour gérer les messages de type Ready puis check du Quorum'''
+        self.logger(ready)
         with self.lock:
-            if vote2.qc_sender not in self.qc2:
-                self.qc2[vote2.qc_sender] = []
-            if vote2.sender not in self.qc2[vote2.qc_sender]:   #not self.sentCoinShare and 
-                self.storeVote2Msg(vote2)
-                self.checkIfQuorum(vote2)
+            if ready.qc_sender not in self.qc2:
+                self.qc2[ready.qc_sender] = []
+            if ready.sender not in self.qc2[ready.qc_sender]:   #not self.sentCoinShare and 
+                self.storeReadyMsg(ready)
+                self.checkIfQuorum(ready)
                 self.tryToCommit()
 
     def handleElectMsg(self, elect: Elect):
@@ -178,29 +177,29 @@ class Node:
 
 ##############       Fonctions Store       ###############
 #########################################################
-    def storeBlock1Msg(self, block1: Block1):
+    def storeBlockMsg(self, block: Block):
         self.logger()
-        self.blocks1[block1.sender] = block1
+        self.blocks1[block.sender] = block
 
-    def storeVote1Msg(self, vote1: Vote1):
+    def storeEchoMsg(self, echo: Echo):
         self.logger()
-        if vote1.block_sender not in self.qc1:
-            self.qc1[vote1.block_sender]=[]
-        self.qc1[vote1.block_sender].append(vote1.sender)
+        if echo.block_sender not in self.qc1:
+            self.qc1[echo.block_sender]=[]
+        self.qc1[echo.block_sender].append(echo.sender)
 
     def storeBlock2Msg(self, block2: Block2): 
         self.logger()
         self.blocks2[block2.sender] = block2
-        if block2.sender not in self.qc1: #au cas où on reçoit un block2 étendant un block1 avant d'avoir reçu le moindre vote1 sur ce block1, on initialise le qc1 pour ce proposeur
+        if block2.sender not in self.qc1: #au cas où on reçoit un block2 étendant un block avant d'avoir reçu le moindre echo sur ce block, on initialise le qc1 pour ce proposeur
             self.qc1[block2.sender] = []
         if block2.qc != None and len(self.qc1[block2.sender]) < self.quorumNum: #on suppose que la vérification de la validité de block2.qc a été faite
             self.qc1[block2.sender] = copy.deepcopy(block2.qc)
 
-    def storeVote2Msg(self, vote2: Vote2):
+    def storeReadyMsg(self, ready: Ready):
         self.logger()
-        if vote2.qc_sender not in self.qc2:
-            self.qc2[vote2.qc_sender]=[]
-        self.qc2[vote2.qc_sender].append(vote2.sender)
+        if ready.qc_sender not in self.qc2:
+            self.qc2[ready.qc_sender]=[]
+        self.qc2[ready.qc_sender].append(ready.sender)
 
     def storeElectMsg(self, elect: Elect):
         self.logger()
@@ -210,17 +209,17 @@ class Node:
 #########################################################
     def checkIfQuorum(self, msg):
         self.logger()
-        if type(msg) == Vote1:
+        if type(msg) == Echo:
             with self.lock:
                 if len(self.qc1[msg.block_sender]) >= self.quorumNum:
                     if msg.block_sender == self.id and not self.sentBlock2:
                         self.sentBlock2 = True
                         threading.Thread(target=self.broadcastBlock2, args=(self.qc1[self.id],)).start()
-                    elif msg.block_sender in self.blocks2 and msg.block_sender not in self.sentVote2: 
-                        self.sentVote2.append(msg.block_sender)
-                        threading.Thread(target=self.broadcastVote2, args=(msg.block_sender,)).start()
+                    elif msg.block_sender in self.blocks2 and msg.block_sender not in self.sentReady: 
+                        self.sentReady.append(msg.block_sender)
+                        threading.Thread(target=self.broadcastReady, args=(msg.block_sender,)).start()
                         
-        elif type(msg) == Vote2:
+        elif type(msg) == Ready:
             with self.lock:
                 if sum(len(qc2) >= self.quorumNum for qc2 in self.qc2.values()) >= self.quorumNum and not self.sentCoinShare:
                     self.sentCoinShare = True
@@ -250,14 +249,14 @@ class Node:
         message=Leader(self.id,self.leader)
         broadcast(self.com, to_json(message, self))
 
-    def broadcastBlock1(self, block):
+    def broadcastBlock(self, block):
         self.logger()
-        self.blocks1[self.id]= block #on stock son propre Block1 pour pouvoir le commit si on est élu comme leader
+        self.blocks[self.id]= block #on stock son propre Block pour pouvoir le commit si on est élu comme leader
         broadcast(self.com, to_json(block, self))
         
-    def broadcastVote1(self, blockSender):
+    def broadcastEcho(self, blockSender):
         self.logger()
-        message=Vote1(self.id,blockSender)
+        message=Echo(self.id,blockSender)
         broadcast(self.com, to_json(message, self))
         
     def broadcastBlock2(self, qc):
@@ -265,9 +264,9 @@ class Node:
         message=Block2(self.id,qc)
         broadcast(self.com, to_json(message, self))
 
-    def broadcastVote2(self, qc_sender):
+    def broadcastReady(self, qc_sender):
         self.logger()
-        message=Vote2(self.id,qc_sender)
+        message=Ready(self.id,qc_sender)
         broadcast(self.com, to_json(message, self))
 
     def broadcastElect(self):
@@ -297,25 +296,25 @@ class Node:
         # Obtenez le nom de la fonction appelante
         function_name = caller_frame.f_code.co_name
 
-        if function_name == "handleBlock1Msg":
+        if function_name == "handleBlockMsg":
             delta = time.time()-self.starter_time
             #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_block1[data.sender] = delta
+            self.datas_block[data.sender] = delta
         
-        elif function_name == "handleVote1Msg":
+        elif function_name == "handleEchoMsg":
             delta = time.time()-self.starter_time
             #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_vote1[f"block {data.block_sender}"][data.sender] = delta
+            self.datas_echo[f"block {data.block_sender}"][data.sender] = delta
         
         elif function_name == "handleBlock2Msg":
             delta = time.time()-self.starter_time
             #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
             self.datas_block2[data.sender] = delta
 
-        elif function_name == "handleVote2Msg":
+        elif function_name == "handleReadyMsg":
             delta = time.time()-self.starter_time
             #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_vote2[f"qc sender {data.qc_sender}"][data.sender] = delta
+            self.datas_ready[f"qc sender {data.qc_sender}"][data.sender] = delta
         
         elif function_name == "handleElectMsg":
             delta = time.time()-self.starter_time

@@ -6,7 +6,7 @@ from data_struct import *
 import threading
 import time
 
-list_ports = [random.randint(1000, 9000) for i in range(4)]
+list_ports = random.sample(range(1000, 9000), 4)
 ports = {
     "node1": list_ports[0],
     "node2": list_ports[1],
@@ -14,10 +14,10 @@ ports = {
     "node4": list_ports[3],
 }
 
-block1 = Block1(1)
-block2 = Block1(2)
-block3 = Block1(3)
-block4 = Block1(4)
+block1 = Block(1)
+block2 = Block(2)
+block3 = Block(3)
+block4 = Block(4)
 
 
 def setup_nodes(start_time):
@@ -41,10 +41,10 @@ def start_coms(Nodes):
     return coms
 
 def write_result(node):
-    node.log_data['Receptions Block1']=node.datas_block1
-    node.log_data['Receptions Vote1']=node.datas_vote1
-    node.log_data['Receptions Block2']=node.datas_block2
-    node.log_data['Receptions Vote2']=node.datas_vote2
+    node.log_data['Receptions Block']=node.datas_block1 #changer les datas
+    node.log_data['Receptions Echo']=node.datas_vote1
+    #node.log_data['Receptions Block2']=node.datas_block2
+    node.log_data['Receptions Ready']=node.datas_vote2
     node.log_data['Receptions Elect']=node.datas_elect
     node.log_data['Receptions Leader']=node.datas_leader
     node.log_data['Commit']=f"Block1 du node : {node.chain[0].sender}"
@@ -61,7 +61,6 @@ if __name__ == "__main__":
     start_time = time.time()
     Nodes = setup_nodes(start_time)
     coms = start_coms(Nodes)
-    print("Nodes and coms setup")
     threads = [
         threading.Thread(target=Nodes[0].handleMsgLoop),
         threading.Thread(target=Nodes[1].handleMsgLoop),
@@ -72,23 +71,11 @@ if __name__ == "__main__":
     for thread in threads:
         thread.start()
 
-    _2PAC_pire_cas = False #variable pour choisir si on se place dans le pire cas de 2PAC et donc si chaque node attent d'avoir crée un qc sur son propre Block1 avant de créer le Block2 qui l'étend
-
     Nodes[0].broadcastBlock1(block1)
     Nodes[1].broadcastBlock1(block2)
     Nodes[2].broadcastBlock1(block3)
     Nodes[3].broadcastBlock1(block4)
-    if not _2PAC_pire_cas:
-        Nodes[0].sentBlock2 = True
-        Nodes[1].sentBlock2 = True
-        Nodes[2].sentBlock2 = True
-        Nodes[3].sentBlock2 = True
-        Nodes[0].broadcastBlock2(None)
-        Nodes[1].broadcastBlock2(None)
-        Nodes[2].broadcastBlock2(None)
-        Nodes[3].broadcastBlock2(None)
 
-    
     for node in Nodes:
         threading.Thread(target = wait_and_write, args=(node,6,)).start() 
 
