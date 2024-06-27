@@ -6,7 +6,7 @@ from data_struct import *
 import threading
 import time
 
-list_ports = [random.randint(1000, 9000) for i in range(4)]
+list_ports = random.sample(range(1000, 9000), 4)
 ports = {
     "node1": list_ports[0],
     "node2": list_ports[1],
