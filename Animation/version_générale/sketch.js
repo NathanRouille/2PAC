@@ -100,6 +100,7 @@ class Trait {
     this.stepProgress = stepProgress;
     this.color = color;
     this.arrived = false;
+    this.speed = Math.floor(Math.random()*3) + 1; // Random speed between 1 and 3
   }
 
   draw() {
@@ -107,7 +108,7 @@ class Trait {
     strokeWeight(1);
     line(this.startX, this.startY, lerp(this.startX, this.endX, this.stepProgress), lerp(this.startY, this.endY, this.stepProgress));
     if (!this.arrived) {
-      this.stepProgress += 1 / totalSteps;
+      this.stepProgress += this.speed / (totalSteps * 2);
       if (this.stepProgress >= 1) {
         this.arrived = true;
         for (let point of points) {
