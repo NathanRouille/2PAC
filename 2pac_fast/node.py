@@ -3,7 +3,6 @@ import threading
 import time
 import random
 import inspect
-import copy
 
 #Importer d'autres fichier
 from sign import verify_signed, Sign
@@ -29,8 +28,8 @@ class Node:
         self.com=Com(self.id,self.port,self.peers,self.delay)
 
         #attributs pour stocker les blocks et coinshare du Node
+        self.sentBlock1 = False
         self.sentBlock2 = False
-        self.sentVote2 = []
         self.sentCoinShare = False
 
         self.block1 = [] #ajouter Block1 à blocks1 plutôt
@@ -39,12 +38,14 @@ class Node:
         
         #attributs pour stocker les messages des autres Nodes
         self.blocks1 = {}
-        self.qc1 = {self.id:[self.id]}
+        self.qc1 = [self.id]
         self.blocks2 = {}
-        self.qc2 = {self.id:[self.id]}
+        self.qc2 = [self.id]
         self.elect = {}
         self.leader = 0 #leader par défaut 0
         self.chain = []
+        
+        self.moveRound = 0 #à enlever / adapter pour views
 
         #attributs propres au réseau de Nodes
         self.qccoin = random.randint(1, 5)
@@ -190,10 +191,9 @@ class Node:
         ''' Fonction pour gérer les messages de type Vote1 puis check du Quorum'''
         self.logger()
         with self.lock:
-            if vote1.block_sender in self.qc1 and vote1.sender not in self.qc1[vote1.block_sender]:
+            if not self.sentBlock2 and vote1.sender not in self.qc1 and vote1.block_sender == self.id:
                 self.storeVote1Msg(vote1)
                 self.checkIfQuorum(vote1)
-                self.tryToCommit()
 
     def handleBlock2Msg(self, block2: Block2):#vérifier le qc ?
         ''' Fonction pour gérer les messages de type Block2 puis broadcast d'un message de type Vote2'''
@@ -201,19 +201,22 @@ class Node:
         if block2.sender not in self.blocks2:
             with self.lock:
                 self.storeBlock2Msg(block2)
-            if block2.sender in self.qc1 and len(self.qc1[block2.sender]) >= self.quorumNum:
-                self.sentVote2.append(block2.sender)
-                threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
-                self.tryToCommit()
+            threading.Thread(target=self.broadcastVote2, args=(block2.sender,)).start()
+            self.tryToCommit() #est ce qu'on a besoin de commit là
 
     def handleVote2Msg(self, vote2: Vote2):
         ''' Fonction pour gérer les messages de type Vote2 puis check du Quorum'''
         self.logger()
         with self.lock:
-            if vote2.qc_sender in self.qc2 and vote2.sender not in self.qc2[vote2.qc_sender]:   #not self.sentCoinShare and 
+            if not self.sentCoinShare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:   #print(f"vote1 : {vote1} pour id= {self.id}")
                 self.storeVote2Msg(vote2)
                 self.checkIfQuorum(vote2)
-                self.tryToCommit()
+        """ if not self.coinshare and vote2.sender not in self.qc2 and vote2.qc_sender == self.id:
+            with self.lock:
+                self.storeVote2Msg(vote2)
+            threading.Thread(target=self.checkIfQuorum, args=(vote2,)).start()
+            #threading.Thread(target=self.tryToNextRound).start() #vérifier si toujours besoin de ça
+            self.tryToCommit() #vérifier si toujours besoin de ça (leader dans qc2 ?) """
 
     def handleElectMsg(self, elect: Elect):
         ''' Fonction pour gérer les messages de type Elect puis check du Quorum'''
@@ -222,7 +225,6 @@ class Node:
             if not self.leader and elect.sender not in self.elect:
                 self.storeElectMsg(elect)
                 self.checkIfQuorum(elect)
-                self.tryToCommit()
     
     def handleLeaderMsg(self, leader: Leader):
         ''' Fonction pour gérer les messages de type Leader puis tryToCommit'''
@@ -243,23 +245,17 @@ class Node:
 
     def storeVote1Msg(self, vote1: Vote1):
         self.logger()
-        if vote1.block_sender not in self.qc1:
-            self.qc1[vote1.block_sender]=[]
-        self.qc1[vote1.block_sender].append(vote1.sender)
+        self.qc1.append(vote1.sender)
 
     def storeBlock2Msg(self, block2: Block2): 
         self.logger()
         self.blocks2[block2.sender] = block2
-        if block2.sender not in self.qc1: #au cas où on reçoit un block2 étendant un block1 avant d'avoir reçu le moindre vote1 sur ce block1, on initialise le qc1 pour ce proposeur
-            self.qc1[block2.sender] = []
-        if block2.qc != None and len(self.qc1[block2.sender]) < self.quorumNum: #on suppose que la vérification de la validité de block2.qc a été faite
-            self.qc1[block2.sender] = copy.deepcopy(block2.qc)
 
     def storeVote2Msg(self, vote2: Vote2):
         self.logger()
-        if vote2.qc_sender not in self.qc2:
-            self.qc2[vote2.qc_sender]=[]
-        self.qc2[vote2.qc_sender].append(vote2.sender)
+        self.qc2.append(vote2.sender)
+        #print(f"qc2 : {self.qc2} pour id= {self.id}")
+        #self.moveRound += 1 #toujours besoin de ça ?
 
     def storeElectMsg(self, elect: Elect):
         self.logger()
@@ -271,20 +267,19 @@ class Node:
         self.logger()
         if type(msg) == Vote1:
             with self.lock:
-                if len(self.qc1[msg.block_sender]) >= self.quorumNum:
-                    if msg.block_sender == self.id and not self.sentBlock2:
-                        self.sentBlock2 = True
-                        threading.Thread(target=self.broadcastBlock2, args=(self.qc1[self.id],)).start()
-                    elif msg.block_sender in self.blocks2 and msg.block_sender not in self.sentVote2: 
-                        self.sentVote2.append(msg.block_sender)
-                        threading.Thread(target=self.broadcastVote2, args=(msg.block_sender,)).start()
-                        
+                if len(self.qc1) >= self.quorumNum:
+                    self.block2.append(True) ####A modifier###
+                    self.sentBlock2 = True
+                    threading.Thread(target=self.broadcastBlock2, args=(self.qc1,)).start()
+
         elif type(msg) == Vote2:
             with self.lock:
-                if sum(len(qc2) >= self.quorumNum for qc2 in self.qc2.values()) >= self.quorumNum: #et pas déjà envoyé de CoinShare
+                if len(self.qc2) >= self.quorumNum:
                     self.coinshare.append(True) ####A modifier###
                     self.sentCoinShare = True
                     threading.Thread(target=self.broadcastElect, args=()).start()
+                """ if len(self.qc2) >= self.quorumNum:
+                threading.Thread(target=self.broadcastElect).start() """
 
         elif type(msg) == Elect:
             with self.lock:
@@ -297,9 +292,7 @@ class Node:
 #########################################################
     def tryToCommit(self):
         self.logger()
-        if not self.leader or self.leader not in self.qc1 or self.leader not in self.qc2:
-            return
-        elif len(self.qc1[self.leader]) >= self.quorumNum and len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks1:
+        if self.leader and self.leader in self.qc2 and self.leader in self.blocks1: #leader dans qc2 = leader done avant
             leader_block = self.blocks1[self.leader]
             self.chain.append(leader_block)
             print(f"Chain {self.chain[0].sender} pour id= {self.id}")
@@ -349,9 +342,9 @@ class Node:
     '''
     def RunLoop(self): # à quoi sert RunLoop (quand est-ce que c'est appelé)
         #start = time.time_ns()
-        #créer block1 et block2
-        self.broadcastBlock1(block1)
-        self.broadcastBlock2(block2)
+        self.broadcastBlock(currentRound)
+        if currentRound % 2 == 0: #changer pour qu'une var dise quand on peut send Elect
+            self.broadcastElect(currentRound)
         self.nextRound.wait()
         currentRound = self.nextRound_round
 
@@ -368,3 +361,9 @@ class Node:
 
         self.logger.info("the average", latency=latency, throughput=throughPut)
         self.logger.info("the total commit", block_number=blockNum, time=pastTime)'''
+
+
+    """ def tryToNextRound(self):
+        with self.lock:
+            if self.moveRound >= self.quorumNum:
+                self.round += 1 """
