@@ -1,8 +1,13 @@
-html, body {
+body {
   margin: 0;
-  padding: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(45deg, #4e54c8, #8f94fb);
 }
-
 canvas {
-  display: block;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
 }
