@@ -42,6 +42,7 @@ struct Node {
 }
 
 impl Node {
+    // Crée une nouvelle instance de Node
     fn new(conf: &Config) -> Self {
         let chain = Chain {
             round: 0,
@@ -101,6 +102,7 @@ impl Node {
         }
     }
 
+    // Exécute la boucle principale du Node
     fn run_loop(&self) {
         let mut current_round = 1;
         let start = SystemTime::now();
@@ -131,6 +133,7 @@ impl Node {
         self.logger.info("the total commit", block_num, past_time);
     }
 
+    // Initialise le CBC
     fn init_cbc(&mut self, conf: &Config) {
         self.cbc = Some(CBC::new(
             &self.name,
@@ -144,6 +147,7 @@ impl Node {
         ));
     }
 
+    // Sélectionne les blocs précédents pour un certain round
     fn select_previous_blocks(&self, round: u64) -> Option<HashMap<String, Vec<u8>>> {
         let mut dag = self.dag.write().unwrap();
         if round == 0 {
@@ -160,6 +164,7 @@ impl Node {
         Some(previous_hash)
     }
 
+    // Stocke un bloc terminé
     fn store_done(&self, done: Done) {
         let mut done_map = self.done.write().unwrap();
         let round_done = done_map.entry(done.round).or_insert_with(HashMap::new);
@@ -169,18 +174,21 @@ impl Node {
         }
     }
 
+    // Stocke un message d'élection de leader
     fn store_elect_msg(&self, elect: Elect) {
         let mut elect_map = self.elect.write().unwrap();
         let round_elect = elect_map.entry(elect.round).or_insert_with(HashMap::new);
         round_elect.insert(elect.sender.clone(), elect.partial_sig);
     }
 
+    // Stocke des blocs en attente
     fn store_pending_blocks(&self, block: Block) {
         let mut pending_blocks = self.pending_blocks.write().unwrap();
         let round_blocks = pending_blocks.entry(block.round).or_insert_with(HashMap::new);
         round_blocks.insert(block.sender.clone(), block);
     }
 
+    // Tente d'élire un leader
     fn try_to_elect_leader(&self, round: u64) {
         let elect = self.elect.read().unwrap();
         if let Some(elect_map) = elect.get(&round) {
@@ -206,6 +214,7 @@ impl Node {
         }
     }
 
+    // Tente de passer au prochain round
     fn try_to_next_round(&self, round: u64) {
         let mut round_lock = self.round.write().unwrap();
         if round != *round_lock {
@@ -224,6 +233,7 @@ impl Node {
         }
     }
 
+    // Tente de valider et de commettre un leader
     fn try_to_commit_leader(&self, round: u64) {
         if round <= self.chain.read().unwrap().round {
             return;
@@ -250,6 +260,7 @@ impl Node {
         }
     }
 
+    // Tente de valider et de commettre un leader ancêtre
     fn try_to_commit_ancestor_leader(&self, round: u64) {
         if round < 2 || round - 2 <= self.chain.read().unwrap().round {
             return;
@@ -273,6 +284,7 @@ impl Node {
         }
     }
 
+    // Trouve un leader valide pour un certain round
     fn find_valid_leader(&self, round: u64) -> HashMap<u64, String> {
         let mut temple_blocks: HashMap<u64, HashMap<String, Block>> = HashMap::new();
         let block = self.dag.read().unwrap().get(&round).and_then(|r| r.get(&self.leader.read().unwrap()[&round])).unwrap().clone();
@@ -302,6 +314,7 @@ impl Node {
         valid_leader
     }
 
+    // Commit les blocs ancêtres
     fn commit_ancestor_blocks(&self, round: u64) {
         let mut temple_blocks: HashMap<u64, HashMap<String, Block>> = HashMap::new();
         let block = self.dag.read().unwrap()
@@ -340,6 +353,7 @@ impl Node {
         }
     }
 
+    // Vérifie la signature ED25519
     fn verify_sig_ed25519(&self, peer: &str, data: &impl Serialize, sig: &[u8]) -> bool {
         if let Some(pub_key) = self.public_key_map.get(peer) {
             match bincode::serialize(data) {
@@ -363,10 +377,12 @@ impl Node {
         }
     }
 
+    // Vérifie si le Node est défectueux
     fn is_faulty_node(&self) -> bool {
         self.is_faulty
     }
 
+    // Crée un nouveau bloc
     fn new_block(&self, round: u64, previous_hash: HashMap<String, Vec<u8>>) -> Block {
         let mut batch = Vec::new();
         let tx = generate_tx(20);
@@ -383,6 +399,7 @@ impl Node {
         }
     }
 
+    // Vérifie si un bloc peut être ajouté au DAG
     fn check_whether_can_add_to_dag(&self, block: &Block) -> bool {
         let dag = self.dag.read().unwrap();
         let link_hash = &block.previous_hash;
@@ -394,6 +411,7 @@ impl Node {
         true
     }
 
+    // Tente de mettre à jour le DAG avec un bloc donné
     fn try_to_update_dag(&self, block: Block) {
         let can_add = self.check_whether_can_add_to_dag(&block);
         if can_add {
@@ -418,6 +436,7 @@ impl Node {
         }
     }
 
+    // Tente de mettre à jour le DAG à partir des blocs en attente
     fn try_to_update_dag_from_pending(&self, round: u64) {
         let mut pending_blocks = self.pending_blocks.write().unwrap();
         if let Some(round_blocks) = pending_blocks.get(&round) {
@@ -430,3 +449,4 @@ impl Node {
         }
     }
 }
+
