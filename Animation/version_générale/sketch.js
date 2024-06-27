@@ -2,17 +2,17 @@ let nodes = [];
 let points = [];
 let stages = ['Nodes', 'Block 1', 'Vote 1', 'Block 2', 'Vote 2', 'Election'];
 let stageWidth;
-let totalSteps = 120; // Number of frames to complete one stage, doublé pour une propagation plus lente
+let totalSteps = 120; // Nombre de frames pour compléter une étape
 let traits = [];
-let restartTime = 6000; // 6 seconds
+let restartTime = 6000; // 6 secondes
 let simulationEnded = false;
 let endTime = 0;
 
 const voteColors = {
-  100: 'red',    // R1, S1, T1
-  250: 'green',  // R2, S2, T2
-  400: 'blue',   // R3, S3, T3
-  550: 'orange'  // R4, S4, T4
+  100: '#FFB6C1',   // LightPink
+  250: '#ADD8E6',   // LightBlue
+  400: '#90EE90',   // LightGreen
+  550: '#FFD700'    // LightYellow
 };
 
 class Node {
@@ -21,7 +21,7 @@ class Node {
     this.y = y;
     this.label = label;
     this.sent = false;
-    this.stage = 0; // Les nœuds sont toujours au stage 0
+    this.stage = 0; // Nœuds toujours au stage 0
     this.startDelay = startDelay;
     this.startTime = millis();
   }
@@ -38,7 +38,7 @@ class Node {
     if (!this.sent && millis() - this.startTime >= this.startDelay) {
       for (let point of points) {
         if (point.stage === 1 && this.y !== point.y) {
-          let trait = new Trait(this.x, this.y, point.x, point.y, 0, 'blue');
+          let trait = new Trait(this.x, this.y, point.x, point.y, 0, '#CCCCCC'); // Couleur pastel pour le trait
           traits.push(trait);
         }
       }
@@ -55,7 +55,7 @@ class Point {
     this.received = 0;
     this.stage = stage;
     this.sent = false;
-    this.color = 'black'; // Default color for circles
+    this.color = '#CCCCCC'; // Couleur pastel par défaut pour les cercles
   }
 
   draw() {
@@ -74,7 +74,7 @@ class Point {
     if (this.received >= requiredReceived && !this.sent) {
       for (let point of points) {
         if (this.stage + 1 === point.stage && this.y !== point.y) {
-          let trait = new Trait(this.x, this.y, point.x, point.y, 0, 'blue');
+          let trait = new Trait(this.x, this.y, point.x, point.y, 0, '#CCCCCC'); // Couleur pastel pour le trait
           traits.push(trait);
         }
       }
@@ -83,8 +83,8 @@ class Point {
   }
 
   receiveTrait(trait) {
-    if (this.stage === 2 || this.stage === 4) { // Change color for Vote 1 and Vote 2 stages
-      this.color = voteColors[this.y] || 'blue';
+    if (this.stage === 2 || this.stage === 4) { // Changement de couleur pour Vote 1 et Vote 2
+      this.color = voteColors[this.y] || '#CCCCCC'; // Utilisation de la couleur associée
       trait.color = this.color;
     }
     this.received++;
@@ -100,7 +100,7 @@ class Trait {
     this.stepProgress = stepProgress;
     this.color = color;
     this.arrived = false;
-    this.speed = Math.floor(Math.random()*3) + 1; // Random speed between 1 and 3
+    this.speed = Math.floor(Math.random() * 3) + 1; // Vitesse aléatoire entre 1 et 3
   }
 
   draw() {
@@ -116,7 +116,7 @@ class Trait {
             point.receiveTrait(this);
           }
         }
-        // Check if simulation has ended
+        // Vérification si la simulation est terminée
         if (traits.every(trait => trait.arrived)) {
           simulationEnded = true;
           endTime = millis();
@@ -168,7 +168,7 @@ function draw() {
 }
 
 function drawTimeStages() {
-  stroke('green');
+  stroke('#CCCCCC'); // Couleur pastel pour les lignes de temps
   strokeWeight(2);
   for (let i = 1; i < stages.length; i++) {
     let x = i * stageWidth;
@@ -177,7 +177,7 @@ function drawTimeStages() {
     }
   }
 
-  // Draw stage labels
+  // Dessiner les étiquettes des étapes
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
@@ -188,7 +188,7 @@ function drawTimeStages() {
 }
 
 function drawPoints() {
-  fill(0);
+  fill('#CCCCCC'); // Couleur pastel pour les cercles
   noStroke();
   for (let point of points) {
     for (let i = 1; i < stages.length; i++) {
@@ -207,7 +207,7 @@ function initializeNodesAndPoints() {
   nodes.push(new Node(stageWidth / 2, 100, 'P1', 0));
   nodes.push(new Node(stageWidth / 2, 250, 'P2', 0));
   nodes.push(new Node(stageWidth / 2, 400, 'P3', 0));
-  nodes.push(new Node(stageWidth / 2, 550, 'P4', 3000)); // Adding a delay of 3000 milliseconds for P4
+  nodes.push(new Node(stageWidth / 2, 550, 'P4', 3000)); // Ajout d'un délai de 3000 millisecondes pour P4
 
   points.push(new Point(stageWidth * 1.5, 100, 'Q1', 1));
   points.push(new Point(stageWidth * 1.5, 250, 'Q2', 1));
