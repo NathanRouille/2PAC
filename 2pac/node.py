@@ -14,7 +14,7 @@ import os
 
 
 class Node:
-    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool,start_time):
+    def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool,start_time, seed: int):
 
         # attributs propres au Node
         self.id = id #de 1 à 4
@@ -43,7 +43,7 @@ class Node:
         self.chain = []
 
         #attributs propres au réseau de Nodes
-        random.seed(700)
+        random.seed(seed)
         self.qccoin = random.randint(1, 4) #qccoin choisi de manière déterministe mais change à chaque exécution, valeur commune à tous les nodes grâce à une seed d'aléatoire
         self.nodeNum = 4
         self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)
@@ -61,73 +61,15 @@ class Node:
 
         #fichier log
         self.log_file_path = os.path.join('log', f'node_{self.id}.json')
-        # Create log directory if it doesn't exist
+        #on crée un dossier log si il n'existe pas
         if not os.path.exists('log'):
             os.makedirs('log')
-        # Initialize log file with empty JSON structure
+        # on initialise les logs avec des json vides
         self.initialize_log_file()
-
-        
-        #attributs de test de performances
-        #self.evaluation = []
-        #self.commitTime = []
-           
-    def initialize_log_file(self):
-            with open(self.log_file_path, 'w') as log_file:
-                json.dump({}, log_file, indent=4)
-    
-    def write_log(self, log_data):
-        with open(self.log_file_path, 'w') as log_file:
-            # Write the provided dictionary to the log file in JSON format
-            json.dump(log_data, log_file, indent=4)
-    
-    def logger(self,data=None):
-        # Obtenez le cadre de pile actuel
-        current_frame = inspect.currentframe()
-        # Obtenez le cadre de pile de l'appelant (le cadre parent)
-        caller_frame = current_frame.f_back
-        # Obtenez le nom de la fonction appelante
-        function_name = caller_frame.f_code.co_name
-
-        if function_name == "handleBlock1Msg":
-            delta = time.time()-self.starter_time
-            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_block1[data.sender] = delta
-        
-        elif function_name == "handleVote1Msg":
-            delta = time.time()-self.starter_time
-            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_vote1[f"block {data.block_sender}"][data.sender] = delta
-        
-        elif function_name == "handleBlock2Msg":
-            delta = time.time()-self.starter_time
-            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_block2[data.sender] = delta
-
-        elif function_name == "handleVote2Msg":
-            delta = time.time()-self.starter_time
-            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_vote2[f"qc sender {data.qc_sender}"][data.sender] = delta
-        
-        elif function_name == "handleElectMsg":
-            delta = time.time()-self.starter_time
-            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_elect[data.sender] = delta
-                            
-        elif function_name == "handleLeaderMsg":
-            delta = time.time()-self.starter_time
-            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
-            self.datas_leader[data.sender] = delta 
-            self.datas_leader["id leader"] = self.leader              
-          
-        else:                   
-            #print(f"secondary fonction: {function_name} reached by node: {self.id}")
-            pass
 
    
     def handleMsgLoop(self):
         ''' Fonction pour gérer les messages reçus par le Node'''
-
         self.logger()
         msgCh = self.com.recv
         while True:
@@ -136,42 +78,34 @@ class Node:
             msg_type = msgWithSig["type"]
             msg_publickey= msgWithSig["public_key"]
             msg_signature= msgWithSig["signature"]
-            """ print(f"Verify msg : {verify_signed(msg_signature)}") """
-            if not verify_signed(msg_signature):
+            if not verify_signed(msg_signature): #on vérifie la signature du message
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
             if msg_type == 'Block1':
-                #print(f"msgAsserted de Block1 : {msgAsserted} pour id= {self.id}")
                 block1=Block1(msgAsserted["sender"])
                 threading.Thread(target=self.handleBlock1Msg, args=(block1,)).start()
             
             elif msg_type == 'Vote1':
-                #print(f"msgAsserted de Vote1 : {msgAsserted} pour id= {self.id}")
                 vote1=Vote1(msgAsserted["sender"],msgAsserted["Block_sender"])
                 threading.Thread(target=self.handleVote1Msg, args=(vote1,)).start()
             
             elif msg_type == 'Block2':
-                #print(f"msgAsserted de Block2 : {msgAsserted} pour id= {self.id}")
-                #print(f"Bla self.blocks1 : {self.blocks1}")
                 block2=Block2(msgAsserted["sender"],msgAsserted["qc"])
                 threading.Thread(target=self.handleBlock2Msg, args=(block2,)).start()
             
             elif msg_type == 'Vote2':
-                #print(f"msgAsserted de Vote2 : {msgAsserted} pour id= {self.id}")
                 vote2=Vote2(msgAsserted["sender"],msgAsserted["QC_sender"])
                 threading.Thread(target=self.handleVote2Msg, args=(vote2,)).start()
             
             elif msg_type == 'Elect':
-                #print(f"msgAsserted de Elect : {msgAsserted} pour id= {self.id}")
                 elect=Elect(msgAsserted["sender"])
                 threading.Thread(target=self.handleElectMsg, args=(elect,)).start()
             elif msg_type == 'Leader':
-                #print(f"msgAsserted de Leader : {msgAsserted} pour id= {self.id}")
                 leader=Leader(msgAsserted["sender"],msgAsserted["id_leader"])
                 threading.Thread(target=self.handleLeaderMsg, args=(leader,)).start()
             
 
-#############       Handle de Message       #############
+#############       Handle Messages       #############
 #########################################################
     def handleBlock1Msg(self, block1: Block1):
         ''' Fonction pour gérer les messages de type Block1 puis broadcast d'un message de type Vote1'''
@@ -242,7 +176,7 @@ class Node:
     
 
 
-##############       Fonction Store       ###############
+##############       Fonctions Store       ###############
 #########################################################
     def storeBlock1Msg(self, block1: Block1):
         self.logger()
@@ -272,7 +206,7 @@ class Node:
         self.logger()
         self.elect[elect.sender] = elect
 
-##############       Check du Quorum       ##############
+##############       Check du Quorum Certificate      ##############
 #########################################################
     def checkIfQuorum(self, msg):
         self.logger()
@@ -308,11 +242,6 @@ class Node:
         elif len(self.qc1[self.leader]) >= self.quorumNum and len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks1:
             leader_block = self.blocks1[self.leader]
             self.chain.append(leader_block)
-            #self.logger.info("commit the leader block", node=self.name, round=round, block_proposer=block.Sender)
-            #commit_time = time.time_ns()
-            #latency = commit_time - block.TimeStamp
-            #self.evaluation.append(latency)
-            #self.commitTime.append(commit_time)
 
 #################       Broadcast       #################
 #########################################################
@@ -344,28 +273,61 @@ class Node:
         self.logger()
         message=Elect(self.id)
         broadcast(self.com, to_json(message, self))
-        
 
+
+
+#################       Gestion des logs       #################
+#########################################################
+
+    def initialize_log_file(self):
+            with open(self.log_file_path, 'w') as log_file:
+                json.dump({}, log_file, indent=4)
     
-    '''
-    def RunLoop(self): # à quoi sert RunLoop (quand est-ce que c'est appelé)
-        #start = time.time_ns()
-        #créer block1 et block2
-        self.broadcastBlock1(block1)
-        self.broadcastBlock2(block2)
-        self.nextRound.wait()
-        currentRound = self.nextRound_round
+    def write_log(self, log_data):
+        with open(self.log_file_path, 'w') as log_file:
+            # Write the provided dictionary to the log file in JSON format
+            json.dump(log_data, log_file, indent=4)
+    
+    def logger(self,data=None):
+        # Obtenez le cadre de pile actuel
+        current_frame = inspect.currentframe()
+        # Obtenez le cadre de pile de l'appelant (le cadre parent)
+        caller_frame = current_frame.f_back
+        # Obtenez le nom de la fonction appelante
+        function_name = caller_frame.f_code.co_name
 
-        # wait all blocks are committed
-        time.sleep(5)
+        if function_name == "handleBlock1Msg":
+            delta = time.time()-self.starter_time
+            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+            self.datas_block1[data.sender] = delta
+        
+        elif function_name == "handleVote1Msg":
+            delta = time.time()-self.starter_time
+            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+            self.datas_vote1[f"block {data.block_sender}"][data.sender] = delta
+        
+        elif function_name == "handleBlock2Msg":
+            delta = time.time()-self.starter_time
+            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+            self.datas_block2[data.sender] = delta
 
-        with self.lock:
-            end = self.commitTime[-1]
-            pastTime = (end - start) / 1e9
-            blockNum = len(self.evaluation)
-            throughPut = (blockNum * self.batchSize) / pastTime
-            totalTime = sum(self.evaluation)
-            latency = (totalTime / 1e9) / blockNum
-
-        self.logger.info("the average", latency=latency, throughput=throughPut)
-        self.logger.info("the total commit", block_number=blockNum, time=pastTime)'''
+        elif function_name == "handleVote2Msg":
+            delta = time.time()-self.starter_time
+            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+            self.datas_vote2[f"qc sender {data.qc_sender}"][data.sender] = delta
+        
+        elif function_name == "handleElectMsg":
+            delta = time.time()-self.starter_time
+            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+            self.datas_elect[data.sender] = delta
+                            
+        elif function_name == "handleLeaderMsg":
+            delta = time.time()-self.starter_time
+            #print(f"node: {self.id} reached fonction_name: {function_name} for the first with delta : {delta}s")
+            self.datas_leader[data.sender] = delta 
+            self.datas_leader["id leader"] = self.leader              
+          
+        else:                   
+            #print(f"secondary fonction: {function_name} reached by node: {self.id}")
+            pass
+    

@@ -23,14 +23,15 @@ block4 = Block1(4)
 vote = Vote2(0,1)
 
 def setup_nodes(start_time):
+    seed = random.randint(1,1000) #on génère une seed random pour avoir un qccoin déterministe identique pour chaque Node mais qui change à chaque exécution
     privatekey4, publickey4 = Sign.generate_keypair()
     privatekey1, publickey1 = Sign.generate_keypair()
     privatekey2, publickey2 = Sign.generate_keypair()
     privatekey3, publickey3 = Sign.generate_keypair()
-    node1 = Node(1,'localhost', ports["node1"], [('localhost', ports["node2"]), ('localhost', ports["node3"]), ('localhost', ports["node4"])], publickey1, privatekey1,False,start_time)
-    node2 = Node(2,'localhost', ports["node2"], [('localhost', ports["node1"]), ('localhost', ports["node3"]), ('localhost', ports["node4"])], publickey2, privatekey2,False,start_time)
-    node3 = Node(3,'localhost', ports["node3"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node4"])], publickey3, privatekey3,False,start_time)
-    node4 = Node(4,'localhost', ports["node4"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node3"])], publickey4, privatekey4,False,start_time)
+    node1 = Node(1,'localhost', ports["node1"], [('localhost', ports["node2"]), ('localhost', ports["node3"]), ('localhost', ports["node4"])], publickey1, privatekey1,False,start_time,seed)
+    node2 = Node(2,'localhost', ports["node2"], [('localhost', ports["node1"]), ('localhost', ports["node3"]), ('localhost', ports["node4"])], publickey2, privatekey2,False,start_time,seed)
+    node3 = Node(3,'localhost', ports["node3"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node4"])], publickey3, privatekey3,False,start_time,seed)
+    node4 = Node(4,'localhost', ports["node4"], [('localhost', ports["node1"]), ('localhost', ports["node2"]), ('localhost', ports["node3"])], publickey4, privatekey4,False,start_time,seed)
     Nodes = [node1, node2, node3, node4]
     return Nodes
 
@@ -63,22 +64,32 @@ if __name__ == "__main__":
     Nodes = setup_nodes(start_time)
     coms = start_coms(Nodes)
     print("Nodes and coms setup")
-    threading.Thread(target=Nodes[0].handleMsgLoop).start()
-    threading.Thread(target=Nodes[1].handleMsgLoop).start()
-    threading.Thread(target=Nodes[2].handleMsgLoop).start()
-    threading.Thread(target=Nodes[3].handleMsgLoop).start()
+    threads = [
+        threading.Thread(target=Nodes[0].handleMsgLoop),
+        threading.Thread(target=Nodes[1].handleMsgLoop),
+        threading.Thread(target=Nodes[2].handleMsgLoop),
+        threading.Thread(target=Nodes[3].handleMsgLoop),
+    ]
+
+    for thread in threads:
+        thread.start()
+
+    _2PAC_pire_cas = False #variable pour choisir si on se place dans le pire cas de 2PAC et donc si chaque node attent d'avoir crée un qc sur son propre Block1 avant de créer le Block2 qui l'étend
 
     Nodes[0].broadcastBlock1(block1)
     Nodes[1].broadcastBlock1(block2)
     Nodes[2].broadcastBlock1(block3)
     Nodes[3].broadcastBlock1(block4)
-    Nodes[0].broadcastBlock2(None)
-    Nodes[1].broadcastBlock2(None)
-    Nodes[2].broadcastBlock2(None)
-    Nodes[3].broadcastBlock2(None)
+    if not _2PAC_pire_cas:
+        Nodes[0].broadcastBlock2(None)
+        Nodes[1].broadcastBlock2(None)
+        Nodes[2].broadcastBlock2(None)
+        Nodes[3].broadcastBlock2(None)
 
     
-
     for node in Nodes:
         threading.Thread(target = wait_and_write, args=(node,6,)).start() 
+
+    for thread in threads:
+        thread.join()
                                                     
