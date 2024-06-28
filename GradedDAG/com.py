@@ -99,12 +99,11 @@ class Com:
             delaying_thread = threading.Thread(target=self.wait, args=(message,0.4,))
             delaying_thread.start()
         else:
-            delaying_thread = threading.Thread(target=self.wait, args=(message,0.8,))
+            delaying_thread = threading.Thread(target=self.wait, args=(message,0.9,))
             delaying_thread.start()
 
 
     def stop(self):
-        #print("Stopping node...")
         for thread in self.threads:
             thread.join()
         self.sock.close()

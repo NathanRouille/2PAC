@@ -3,7 +3,7 @@ import threading
 import time
 import random
 import inspect
-import copy
+import queue
 
 #Importer d'autres fichier
 from sign import verify_signed, Sign
@@ -26,6 +26,9 @@ class Node:
         self.delay = isDelayed
         self.lock = threading.RLock()
         self.com=Com(self.id,self.port,self.peers,self.delay)
+        self.succes = False
+        self.echec = False
+        self.stop_thread = threading.Event()
 
         #attributs pour stocker les blocks et coinshare du Node
         self.sentReady = []
@@ -71,8 +74,11 @@ class Node:
         ''' Fonction pour gérer les messages reçus par le Node'''
         self.logger()
         msgCh = self.com.recv
-        while True:
-            msgWithSig = msgCh.get()
+        while not self.stop_thread.is_set():
+            try:
+                msgWithSig = msgCh.get(timeout=1)  # Utiliser un timeout pour éviter de bloquer indéfiniment
+            except queue.Empty:
+                continue
             msgAsserted = msgWithSig["data"]
             msg_type = msgWithSig["type"]
             msg_signature= msgWithSig["signature"]
@@ -205,6 +211,7 @@ class Node:
                     threading.Thread(target=self.broadcastReady, args=(msg.block_sender,)).start()
                 if sum(len(qc2) >= self.quorumNum for qc2 in self.qc2.values()) >= self.quorumNum and not self.sentCoinShare:
                     self.sentCoinShare = True
+                    self.elect[self.id] = Elect(self.id)
                     threading.Thread(target=self.broadcastElect, args=()).start()
 
         elif type(msg) == Elect:
@@ -220,12 +227,16 @@ class Node:
         self.logger()
         if self.leader: 
             if self.leader not in self.qc2:
-                return
+                self.echec = True # échec
+                self.stop_thread.set()  # Arrête le thread handleMsgLoop
             elif len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks: #on vérifie uniquement que le block du leader est grade2 car il est a fortiori grade1
                 leader_block = self.blocks[self.leader]
                 self.chain.append(leader_block)
+                self.succes = True # succès
+                self.stop_thread.set()  # Arrête le thread handleMsgLoop
             else:
-                return
+                self.echec = True # échec
+                self.stop_thread.set()  # Arrête le thread handleMsgLoop
         
 
 #################       Broadcast       #################

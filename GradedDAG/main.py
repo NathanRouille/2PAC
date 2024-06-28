@@ -50,15 +50,22 @@ def write_result(node):
     node.log_data['Commit']=f"Block du node : {node.chain[0].sender}"
     node.write_log(node.log_data)
 
-def wait_and_write(node,duration):
-    time.sleep(duration)
-    print(f"Writing result for node : {node.id}")
-    try:
-        write_result(node)
-    except:
-        print(False)
-
-    
+def monitor_events(Nodes):
+    while True:
+        success_count = sum(node.succes for node in Nodes)
+        unsuccess_count = sum(node.echec for node in Nodes)
+        if success_count > 0:
+            print('Succès')
+            print("logs disponibles pour les Nodes qui ont commit")
+            for node in Nodes:
+                if node.succes:
+                    write_result(node)
+            break
+        elif unsuccess_count == len(Nodes):
+            print('Echec')
+            print("Pas de commit")
+            break
+        time.sleep(1)   
 
 if __name__ == "__main__":
     start_time = time.time()
@@ -79,9 +86,13 @@ if __name__ == "__main__":
     Nodes[2].broadcastBlock(block3)
     Nodes[3].broadcastBlock(block4)
 
-    for node in Nodes:
-        threading.Thread(target = wait_and_write, args=(node,8,)).start() 
+    monitor_thread = threading.Thread(target=monitor_events, args=(Nodes,))
+    monitor_thread.start()
 
     for thread in threads:
         thread.join()
-                                                    
+    monitor_thread.join()
+
+    for node in Nodes:
+        node.stop_thread.set()
+        node.com.stop()                            
