@@ -4,6 +4,7 @@ import time
 import random
 import inspect
 import copy
+import queue
 
 #Importer d'autres fichier
 from sign import verify_signed, Sign
@@ -23,9 +24,12 @@ class Node:
         self.peers = peers
         self.publickey = publickey
         self.privatekey = privatekey
-        self.delay = isDelayed           #A rajouter
+        self.delay = isDelayed
         self.lock = threading.RLock()
         self.com=Com(self.id,self.port,self.peers,self.delay)
+        self.succes = False
+        self.echec = False
+        self.stop_thread = threading.Event()
 
         #attributs pour stocker les blocks et coinshare du Node
         self.sentBlock2 = False
@@ -72,8 +76,11 @@ class Node:
         ''' Fonction pour gérer les messages reçus par le Node'''
         self.logger()
         msgCh = self.com.recv
-        while True:
-            msgWithSig = msgCh.get()
+        while not self.stop_thread.is_set():
+            try:
+                msgWithSig = msgCh.get(timeout=1)  # Utiliser un timeout pour éviter de bloquer indéfiniment
+            except queue.Empty:
+                continue
             msgAsserted = msgWithSig["data"]
             msg_type = msgWithSig["type"]
             msg_signature= msgWithSig["signature"]
@@ -130,7 +137,7 @@ class Node:
                 self.checkIfQuorum(vote1)
                 self.tryToCommit()
 
-    def handleBlock2Msg(self, block2: Block2):#vérifier le qc ?
+    def handleBlock2Msg(self, block2: Block2):
         ''' Fonction pour gérer les messages de type Block2 puis broadcast d'un message de type Vote2'''
         self.logger(block2)
         if block2.sender not in self.blocks2:
@@ -182,8 +189,6 @@ class Node:
 
     def storeVote1Msg(self, vote1: Vote1):
         self.logger()
-        if vote1.block_sender not in self.qc1:
-            self.qc1[vote1.block_sender]=[]
         self.qc1[vote1.block_sender].append(vote1.sender)
 
     def storeBlock2Msg(self, block2: Block2): 
@@ -196,8 +201,6 @@ class Node:
 
     def storeVote2Msg(self, vote2: Vote2):
         self.logger()
-        if vote2.qc_sender not in self.qc2:
-            self.qc2[vote2.qc_sender]=[]
         self.qc2[vote2.qc_sender].append(vote2.sender)
 
     def storeElectMsg(self, elect: Elect):
@@ -212,10 +215,12 @@ class Node:
             with self.lock:
                 if len(self.qc1[msg.block_sender]) >= self.quorumNum:
                     if msg.block_sender == self.id and not self.sentBlock2:
-                        self.sentBlock2 = True
                         threading.Thread(target=self.broadcastBlock2, args=(self.qc1[self.id],)).start()
-                    elif msg.block_sender in self.blocks2 and msg.block_sender not in self.sentVote2: 
+                    if msg.block_sender in self.blocks2 and msg.block_sender not in self.sentVote2: 
                         self.sentVote2.append(msg.block_sender)
+                        if msg.block_sender not in self.qc2:
+                            self.qc2[msg.block_sender] = []
+                        self.qc2[msg.block_sender].append(self.id)
                         threading.Thread(target=self.broadcastVote2, args=(msg.block_sender,)).start()
                         
         elif type(msg) == Vote2:
@@ -235,11 +240,19 @@ class Node:
 #########################################################
     def tryToCommit(self):
         self.logger()
-        if not self.leader or self.leader not in self.qc1 or self.leader not in self.qc2:
-            return
-        elif len(self.qc1[self.leader]) >= self.quorumNum and len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks1:
-            leader_block = self.blocks1[self.leader]
-            self.chain.append(leader_block)
+        if self.leader: 
+            if self.leader not in self.qc1 or self.leader not in self.qc2:
+                self.echec = True # échec
+                self.stop_thread.set()  # Arrête le thread handleMsgLoop
+            elif len(self.qc1[self.leader]) >= self.quorumNum and len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks1:
+                leader_block = self.blocks1[self.leader]
+                self.chain.append(leader_block)
+                self.succes = True # succès
+                self.stop_thread.set()  # Arrête le thread handleMsgLoop
+            else:
+                self.echec = True # échec
+                self.stop_thread.set()  # Arrête le thread handleMsgLoop
+                
 
 #################       Broadcast       #################
 #########################################################
@@ -252,6 +265,7 @@ class Node:
         self.logger()
         self.blocks1[self.id]= block #on stock son propre Block1 pour pouvoir le commit si on est élu comme leader
         broadcast(self.com, to_json(block, self))
+        self.broadcastVote1(self.id)
         
     def broadcastVote1(self, blockSender):
         self.logger()
@@ -261,6 +275,8 @@ class Node:
     def broadcastBlock2(self, qc):
         self.logger()
         message=Block2(self.id,qc)
+        self.blocks2[self.id]= message
+        self.sentBlock2 = True
         broadcast(self.com, to_json(message, self))
 
     def broadcastVote2(self, qc_sender):

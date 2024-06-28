@@ -23,7 +23,7 @@ class Node:
         self.peers = peers
         self.publickey = publickey
         self.privatekey = privatekey
-        self.delay = isDelayed           #A rajouter
+        self.delay = isDelayed
         self.lock = threading.RLock()
         self.com=Com(self.id,self.port,self.peers,self.delay)
 
@@ -106,7 +106,7 @@ class Node:
         ''' Fonction pour gérer les messages de type Block puis broadcast d'un message de type Echo'''
         self.logger(block)
         if block.sender not in self.blocks:
-            if self.sentCoinShare and block.sender not in self.grade1: #on ne prend pas en compte les nouveaux blocks après avoir envoyé son coinshare
+            if self.sentCoinShare and block.sender not in self.grade1: #on ne prend pas en compte les nouveaux blocks qui ne sont pas de grade 1 après avoir envoyé son coinshare
                 return
             with self.lock:
                 self.storeBlockMsg(block)
@@ -170,14 +170,10 @@ class Node:
 
     def storeEchoMsg(self, echo: Echo):
         self.logger()
-        if echo.block_sender not in self.qc1:
-            self.qc1[echo.block_sender]=[]
         self.qc1[echo.block_sender].append(echo.sender)
 
     def storeReadyMsg(self, ready: Ready):
         self.logger()
-        if ready.block_sender not in self.qc2:
-            self.qc2[ready.block_sender]=[]
         self.qc2[ready.block_sender].append(ready.sender)
 
     def storeElectMsg(self, elect: Elect):
@@ -193,6 +189,9 @@ class Node:
                 if len(self.qc1[msg.block_sender]) >= self.quorumNum and msg.block_sender not in self.sentReady:
                     self.sentReady.append(msg.block_sender)
                     self.grade1.append(msg.block_sender)
+                    if msg.block_sender not in self.qc2:
+                        self.qc2[msg.block_sender] = []
+                    self.qc1[msg.block_sender].append(self.id)
                     threading.Thread(target=self.broadcastReady, args=(msg.block_sender,)).start()
                         
         elif type(msg) == Ready:
@@ -200,6 +199,9 @@ class Node:
                 if len(self.qc2[msg.block_sender]) >= self.thirdNum and msg.block_sender not in self.sentReady:
                     self.sentReady.append(msg.block_sender)
                     self.grade1.append(msg.block_sender)
+                    if msg.block_sender not in self.qc2:
+                        self.qc2[msg.block_sender] = []
+                    self.qc1[msg.block_sender].append(self.id)
                     threading.Thread(target=self.broadcastReady, args=(msg.block_sender,)).start()
                 if sum(len(qc2) >= self.quorumNum for qc2 in self.qc2.values()) >= self.quorumNum and not self.sentCoinShare:
                     self.sentCoinShare = True
@@ -216,11 +218,15 @@ class Node:
 #########################################################
     def tryToCommit(self):
         self.logger()
-        if not self.leader or self.leader not in self.qc2:
-            return
-        elif len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks: #on vérifie uniquement que le block du leader est grade2 car il est a fortiori grade1
-            leader_block = self.blocks[self.leader]
-            self.chain.append(leader_block)
+        if self.leader: 
+            if self.leader not in self.qc2:
+                return
+            elif len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks: #on vérifie uniquement que le block du leader est grade2 car il est a fortiori grade1
+                leader_block = self.blocks[self.leader]
+                self.chain.append(leader_block)
+            else:
+                return
+        
 
 #################       Broadcast       #################
 #########################################################
@@ -233,6 +239,7 @@ class Node:
         self.logger()
         self.blocks[self.id]= block #on stock son propre Block pour pouvoir le commit si on est élu comme leader
         broadcast(self.com, to_json(block, self))
+        self.broadcastEcho(self.id)
         
     def broadcastEcho(self, blockSender):
         self.logger()
