@@ -4,56 +4,56 @@ import time
 import random
 import inspect
 import queue
+import os
 
-#Importer d'autres fichier
+#Imports de fichiers locaux
 from sign import verify_signed, Sign
 from data_struct import *  
 from tools import *
 from com import Com
-import os
+
 
 
 class Node:
     def __init__(self, id : int, host : str, port : int, peers : list, publickey, privatekey, isDelayed: bool,start_time, seed: int):
 
-        # attributs propres au Node
-        self.id = id #de 1 à 4
-        self.host = host
+        #Attributs propres au Node
+        self.id = id                                            #de 1 à 4
+        self.host = host                                        #localhost
         self.port = port
-        self.peers = peers
-        self.publickey = publickey
-        self.privatekey = privatekey
-        self.delay = isDelayed
-        self.lock = threading.RLock()
-        self.com=Com(self.id,self.port,self.peers,self.delay)
-        self.succes = False
-        self.echec = False
-        self.stop_thread = threading.Event()
+        self.peers = peers                                      #liste de tuples comprenant les ports et le host des autres Nodes
+        self.publickey = publickey                              #clé publique du Node
+        self.privatekey = privatekey                            #clé privée du Node
+        self.delay = isDelayed                                  #booléen pour savoir si le Node est delayed ou non
+        self.lock = threading.RLock()                           #verrou pour éviter les conflits d'accès aux ressources partagées
+        self.com=Com(self.id,self.port,self.peers,self.delay)   #classe de communication du Node
+        self.succes = False                                     #booléen pour savoir si le Node a réussi à commit un block
+        self.echec = False                                      #booléen pour savoir si le Node a échoué à commit un block
+        self.stop_thread = threading.Event()                    #event pour arrêter le thread handleMsgLoop
 
-        #attributs pour stocker les blocks et coinshare du Node
-        self.sentReady = []
-        self.sentCoinShare = False
+        #Attributs pour stocker les blocks et coinshare du Node
+        self.sentReady = []                                     #liste des Nodes à qui on a envoyé un ready
+        self.sentCoinShare = False                              #booléen pour savoir si le Node a envoyé son coinshare
 
         
-        #attributs pour stocker les messages des autres Nodes
-        self.blocks = {} #on stock tous les blocks que l'on reçoit
-        self.grade1 = [] #on stock tous les id de Nodes dont le Block est grade1 (qui a un qc de echo)
-        self.qc1 = {self.id:[self.id]} #on stock pour chaque Node tous les id de Nodes dont on a reçu un echo qui vote pour le block du premier Node
-        self.qc2 = {self.id:[self.id]} #on stock pour chaque Node tous les id de Nodes dont on a reçu un ready qui vote pour le block du premier Node
-        self.elect = {} #on stock pour chaque node son message d'élection contenant sa coinshare (ici on abstrait la coinshare)
-        self.leader = 0 #leader par défaut 0
-        self.chain = [] #blockchain qui contient le block commit
+        #Attributs pour stocker les messages des autres Nodes
+        self.blocks = {}                                        #dictionnaire des blocks que l'on reçoit
+        self.grade1 = []                                        #dictionnaire des id de Nodes dont le Block est grade1 (qui a un qc de echo)
+        self.qc1 = {self.id:[self.id]}                          #dictionnaire des id de Nodes dont on a reçu un echo qui vote pour le block du premier Node
+        self.qc2 = {self.id:[self.id]}                          #dictionnaire des id de Nodes dont on a reçu un ready qui vote pour le block du premier Node
+        self.elect = {}                                         #dictionnaire du message d'élection contenant sa coinshare (ici on abstrait la coinshare)
+        self.leader = 0                                         #leader par défaut 0 (aucun leader élu)
+        self.chain = []                                         #blockchain qui contient le block commit
 
-        #attributs propres au réseau de Nodes
+        #Attributs propres au réseau de Nodes
         random.seed(seed)
-        self.qccoin = random.randint(1, 4) #qccoin choisi de manière déterministe mais change à chaque exécution, valeur commune à tous les nodes grâce à une seed d'aléatoire
-        self.nodeNum = 4
-        self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)
-        self.thirdNum = math.ceil(self.nodeNum / 3.0)
+        self.qccoin = random.randint(1, 4)                      #qccoin choisi de manière déterministe mais change à chaque exécution, valeur commune à tous les nodes grâce à une seed d'aléatoire
+        self.nodeNum = 4                                        #nombre de Nodes
+        self.quorumNum = math.ceil(2 * self.nodeNum / 3.0)      #nombre de Nodes pour le quorum
+        self.thirdNum = math.ceil(self.nodeNum / 3.0)           
 
-        #logger
-        self.starter_time = start_time
-
+        #Logger
+        self.starter_time = start_time                          #temps de départ (le même pour tous les Nodes)
         self.datas_block = {1: None, 2: None, 3: None, 4: None}
         self.datas_echo = {"block 1": {1: None, 2: None, 3: None, 4: None}, "block 2": {1: None, 2: None, 3: None, 4: None}, "block 3": {1: None, 2: None, 3: None, 4: None}, "block 4": {1: None, 2: None, 3: None, 4: None}}
         self.datas_ready = {"qc sender 1": {1: None, 2: None, 3: None, 4: None}, "qc sender 2": {1: None, 2: None, 3: None, 4: None}, "qc sender 3": {1: None, 2: None, 3: None, 4: None}, "qc sender 4": {1: None, 2: None, 3: None, 4: None}}
@@ -61,13 +61,11 @@ class Node:
         self.datas_leader = {1: None, 2: None, 3: None, 4: None, "id leader": 0}
         self.log_data={'Receptions Block':{},'Receptions Echo':{},'Receptions Ready':{},'Receptions Elect':{},'Receptions Leader':{},'Commit': None}
 
-        #fichier log
+        #Fichier log
         self.log_file_path = os.path.join('log', f'node_{self.id}.json')
-        #on crée un dossier log si il n'existe pas
-        if not os.path.exists('log'):
+        if not os.path.exists('log'):                           #on crée le dossier log s'il n'existe pas
             os.makedirs('log')
-        # on initialise les logs avec des json vides
-        self.initialize_log_file()
+        self.initialize_log_file()                              # on initialise les logs avec des json vides
 
    
     def handleMsgLoop(self):
@@ -76,13 +74,13 @@ class Node:
         msgCh = self.com.recv
         while not self.stop_thread.is_set():
             try:
-                msgWithSig = msgCh.get(timeout=1)  # Utiliser un timeout pour éviter de bloquer indéfiniment
+                msgWithSig = msgCh.get(timeout=1)               # Utiliser un timeout pour éviter de bloquer indéfiniment
             except queue.Empty:
                 continue
             msgAsserted = msgWithSig["data"]
             msg_type = msgWithSig["type"]
             msg_signature= msgWithSig["signature"]
-            if not verify_signed(msg_signature): #on vérifie la signature du message
+            if not verify_signed(msg_signature):                #on vérifie la signature du message
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
                 continue
             if msg_type == 'Block':
@@ -112,14 +110,14 @@ class Node:
         ''' Fonction pour gérer les messages de type Block puis broadcast d'un message de type Echo'''
         self.logger(block)
         if block.sender not in self.blocks:
-            if self.sentCoinShare and block.sender not in self.grade1: #on ne prend pas en compte les nouveaux blocks qui ne sont pas de grade 1 après avoir envoyé son coinshare
+            if self.sentCoinShare and block.sender not in self.grade1:                  #Les nouveaux blocks qui ne sont pas de grade 1 ne sont pas pris un compte après avoir envoyé sa coinshare
                 return
             with self.lock:
                 self.storeBlockMsg(block)
             if block.sender not in self.qc1:
                 self.qc1[block.sender] = []
             self.qc1[block.sender].append(self.id)
-            threading.Thread(target=self.broadcastEcho, args=(block.sender,)).start() #on abstrait la vérification du contenu du block avant de le voter
+            threading.Thread(target=self.broadcastEcho, args=(block.sender,)).start()   #La vérification du contenu du block avant de le voter est abstraite
             self.tryToCommit()
     
 
@@ -127,7 +125,7 @@ class Node:
         ''' Fonction pour gérer les messages de type Echo puis check du Quorum'''
         self.logger(echo)
         with self.lock:
-            if self.sentCoinShare and echo.block_sender not in self.grade1: #on ne prend les echo pour un block qui n'est pas grade 1 (dont on a pas reçu de qc de echo) après avoir envoyé son coinshare
+            if self.sentCoinShare and echo.block_sender not in self.grade1:             #Les echo pour un block qui n'est pas grade 1 (non reçeption d'un qc de echo) ne sont pas pris en compte après avoir envoyé son coinshare
                 return
             if echo.block_sender not in self.qc1:
                 self.qc1[echo.block_sender] = []
@@ -140,7 +138,7 @@ class Node:
         ''' Fonction pour gérer les messages de type Ready puis check du Quorum'''
         self.logger(ready)
         with self.lock:
-            if self.sentCoinShare and ready.block_sender not in self.grade1: #on ne prend les ready pour un block qui n'est pas grade 1 (dont on a pas reçu de qc de echo) après avoir envoyé son coinshare
+            if self.sentCoinShare and ready.block_sender not in self.grade1:            #on ne prend les ready pour un block qui n'est pas grade 1 (dont on a pas reçu de qc de echo) après avoir envoyé son coinshare
                 return
             if ready.block_sender not in self.qc2:
                 self.qc2[ready.block_sender] = []
@@ -269,7 +267,7 @@ class Node:
 
 
 
-#################       Gestion des logs       #################
+##############       Gestion des logs       #############
 #########################################################
 
     def initialize_log_file(self):
