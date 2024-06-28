@@ -55,18 +55,17 @@ def monitor_events(Nodes):
     while True:
         success_count = sum(node.succes for node in Nodes)
         unsuccess_count = sum(node.echec for node in Nodes)
-
-        print(f"Successful count: {success_count}, Unsuccessful count: {unsuccess_count}")
-
-        if success_count == len(Nodes):
-            print("Commit réussi, logs disponibles")
+        if success_count > 0:
+            print('Succès')
+            print("logs disponibles pour les Nodes qui ont commit")
             for node in Nodes:
-                write_result(node)
+                if node.succes:
+                    write_result(node)
             break
         elif unsuccess_count == len(Nodes):
+            print('Echec')
             print("Pas de commit")
             break
-
         time.sleep(1)
     
 

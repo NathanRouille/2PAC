@@ -227,6 +227,7 @@ class Node:
             with self.lock:
                 if sum(len(qc2) >= self.quorumNum for qc2 in self.qc2.values()) >= self.quorumNum and not self.sentCoinShare:
                     self.sentCoinShare = True
+                    self.elect[self.id] = Elect(self.id)
                     threading.Thread(target=self.broadcastElect, args=()).start()
 
         elif type(msg) == Elect:

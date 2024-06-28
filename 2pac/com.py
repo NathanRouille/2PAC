@@ -99,7 +99,7 @@ class Com:
             delaying_thread = threading.Thread(target=self.wait, args=(message,0.4,))
             delaying_thread.start()
         else:
-            delaying_thread = threading.Thread(target=self.wait, args=(message,1.3,))
+            delaying_thread = threading.Thread(target=self.wait, args=(message,1,))
             delaying_thread.start()
 
 
