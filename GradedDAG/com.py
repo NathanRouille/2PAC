@@ -67,12 +67,7 @@ class Com:
                 message = data.decode('utf-8')
                 
                 message = json.loads(message)
-                #self.show_message(message)
                 self.recv.put(message)
-                """ print(f"id : {self.id}")
-                print(f"recv: {self.recv}")
-                print(verify_signed(self.recv.get()["signature"]))
-                print(f'recv of {self.port} :: {type(self.recv.get())}') """
             except Exception as e:
                 print(f"Error handling client: {e}")
                 break
@@ -99,7 +94,7 @@ class Com:
             delaying_thread = threading.Thread(target=self.wait, args=(message,0.4,))
             delaying_thread.start()
         else:
-            delaying_thread = threading.Thread(target=self.wait, args=(message,0.8,))
+            delaying_thread = threading.Thread(target=self.wait, args=(message,0.9,))
             delaying_thread.start()
 
 
