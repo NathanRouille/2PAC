@@ -72,7 +72,7 @@ class Node:
         ''' Fonction pour gérer les messages reçus par le Node'''
         self.logger()
         msgCh = self.com.recv
-        while not self.stop_thread.is_set():
+        while True:
             try:
                 msgWithSig = msgCh.get(timeout=1)               # Utiliser un timeout pour éviter de bloquer indéfiniment
             except queue.Empty:
@@ -226,15 +226,12 @@ class Node:
         if self.leader: 
             if self.leader not in self.qc2:
                 self.echec = True # échec
-                self.stop_thread.set()  # Arrête le thread handleMsgLoop
             elif len(self.qc2[self.leader]) >= self.quorumNum and self.leader in self.blocks: #on vérifie uniquement que le block du leader est grade2 car il est a fortiori grade1
                 leader_block = self.blocks[self.leader]
                 self.chain.append(leader_block)
                 self.succes = True # succès
-                self.stop_thread.set()  # Arrête le thread handleMsgLoop
             else:
                 self.echec = True # échec
-                self.stop_thread.set()  # Arrête le thread handleMsgLoop
         
 
 #################       Broadcast       #################
