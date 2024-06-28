@@ -65,7 +65,7 @@ def monitor_events(Nodes):
             for node in Nodes:
                 write_result(node)
             os._exit(0)
-            break
+            
         elif unsuccess_count == len(Nodes):
             print(f'Echec, on a commit aucun block en {time.time()-start_time}s')
             print("Les logs des Nodes sont disponibles")
