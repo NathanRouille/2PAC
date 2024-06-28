@@ -17,49 +17,39 @@ def handlemessage(message):
 
 def broadcast(com, message):
     com.broadcast_message(message)
-
     
 def to_json(obj,node):
     base64_representation = base64.b64encode(node.publickey.encode()).decode('utf-8')
-    if isinstance(obj, Block1):
+    if isinstance(obj, Block):
         data = {
             'sender': obj.sender,
         }
         return json.dumps({
-            'type': 'Block1',
+            'type': 'Block',
             'data': data,
             'signature': send_signed(data,node.privatekey),
             'public_key': base64_representation
         })
-    elif isinstance(obj, Block2):
-        data = {
-            'sender': obj.sender,  
-            'qc': obj.qc
-        }
-        return json.dumps({
-            'type': 'Block2',
-            'data': data,
-            'signature': send_signed(data,node.privatekey),
-            'public_key': base64_representation
-        })
-    elif isinstance(obj, Vote1):
+    
+    elif isinstance(obj, Echo):
         data = {
             'sender': obj.sender,
             'Block_sender': obj.block_sender
         }
         return json.dumps({
-            'type': 'Vote1',
+            'type': 'Echo',
             'data': data,
             'signature': send_signed(data,node.privatekey),
             'public_key': base64_representation
         })
-    elif isinstance(obj, Vote2):
+    
+    elif isinstance(obj, Ready):
         data = {
             'sender': obj.sender,
-            'QC_sender': obj.qc_sender
+            'Block_sender': obj.block_sender
         }
         return json.dumps({
-            'type': 'Vote2',
+            'type': 'Ready',
             'data': data,
             'signature': send_signed(data,node.privatekey),
             'public_key': base64_representation

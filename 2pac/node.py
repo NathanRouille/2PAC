@@ -76,7 +76,6 @@ class Node:
             msgWithSig = msgCh.get()
             msgAsserted = msgWithSig["data"]
             msg_type = msgWithSig["type"]
-            msg_publickey= msgWithSig["public_key"]
             msg_signature= msgWithSig["signature"]
             if not verify_signed(msg_signature): #on vérifie la signature du message
                 self.logger.error(f"fail to verify the {msg_type.lower()}'s signature", "round", msgAsserted.Round, "sender", msgAsserted.Sender)
@@ -151,7 +150,7 @@ class Node:
         with self.lock:
             if vote2.qc_sender not in self.qc2:
                 self.qc2[vote2.qc_sender] = []
-            if vote2.sender not in self.qc2[vote2.qc_sender]:   #not self.sentCoinShare and 
+            if vote2.sender not in self.qc2[vote2.qc_sender]:
                 self.storeVote2Msg(vote2)
                 self.checkIfQuorum(vote2)
                 self.tryToCommit()
@@ -170,7 +169,6 @@ class Node:
         self.logger(leader)
         with self.lock:
             if not self.leader:
-                print(f"Commit pour id= {self.id}")
                 self.leader = leader.id_leader
                 self.tryToCommit()
     

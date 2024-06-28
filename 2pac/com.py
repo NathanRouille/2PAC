@@ -90,17 +90,16 @@ class Com:
             print(f"Unable to send message to peer {peer}")
 
     def wait(self,message, duration):
-        print(f'delay applied on {self.id}...')
         time.sleep(duration)
         for peer in self.peers:
                 self.send_message(message, peer)
 
     def broadcast_message(self, message):
         if not self.delay:
-            for peer in self.peers:
-                self.send_message(message, peer)
+            delaying_thread = threading.Thread(target=self.wait, args=(message,0.4,))
+            delaying_thread.start()
         else:
-            delaying_thread = threading.Thread(target=self.wait, args=(message,4,))
+            delaying_thread = threading.Thread(target=self.wait, args=(message,0.9,))
             delaying_thread.start()
 
 
