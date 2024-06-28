@@ -5,6 +5,7 @@ from sign import Sign
 from data_struct import *
 import threading
 import time
+import os
 
 list_ports = random.sample(range(1000, 9000), 4)
 ports = {
@@ -47,7 +48,10 @@ def write_result(node):
     node.log_data['Receptions Ready']=node.datas_ready
     node.log_data['Receptions Elect']=node.datas_elect
     node.log_data['Receptions Leader']=node.datas_leader
-    node.log_data['Commit']=f"Block du node : {node.chain[0].sender}"
+    try:
+        node.log_data['Commit']=f"Block du node : {node.chain[0].sender}"
+    except:
+        node.log_data['Commit']="Pas de block commit" 
     node.write_log(node.log_data)
 
 def monitor_events(Nodes):
@@ -55,16 +59,18 @@ def monitor_events(Nodes):
         success_count = sum(node.succes for node in Nodes)
         unsuccess_count = sum(node.echec for node in Nodes)
         if success_count > 0:
-            print('Succès')
-            print("logs disponibles pour les Nodes qui ont commit")
+            print(f'Succès, on a commit un block en {time.time()-start_time}s')
+            print("Les logs des Nodes sont disponibles")
             for node in Nodes:
-                if node.succes:
-                    write_result(node)
+                write_result(node)
+            os._exit(0)
             break
         elif unsuccess_count == len(Nodes):
-            print('Echec')
-            print("Pas de commit")
-            break
+            print(f'Echec, on a commit aucun block en {time.time()-start_time}s')
+            print("Les logs des Nodes sont disponibles")
+            for node in Nodes:
+                write_result(node)
+            os._exit(0)
         time.sleep(1)   
 
 if __name__ == "__main__":
