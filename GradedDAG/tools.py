@@ -1,30 +1,18 @@
-import socket
-import threading
-import time
 import json
-from com import Com
-from data_struct import *
+from data_struct import Block,Echo,Ready,Elect,Leader
 import base64
-from sign import *
+from sign import send_signed
 
-def handlemessage(message):
-    pass
-
-""" def start_com(node):
-    com = Com(node.port, node.peers)
-    com.start()
-    return com """
-
-def broadcast(com, message):
-    com.broadcast_message(message)
     
 def to_json(obj,node):
+    '''Fonction pour générer les messages au format json à partir des différents types d'objets'''
     base64_representation = base64.b64encode(node.publickey.encode()).decode('utf-8')
     if isinstance(obj, Block):
         data = {
             'sender': obj.sender,
         }
         return json.dumps({
+            'sim_number': node.simulation_number,
             'type': 'Block',
             'data': data,
             'signature': send_signed(data,node.privatekey),
@@ -37,6 +25,7 @@ def to_json(obj,node):
             'Block_sender': obj.block_sender
         }
         return json.dumps({
+            'sim_number': node.simulation_number,
             'type': 'Echo',
             'data': data,
             'signature': send_signed(data,node.privatekey),
@@ -49,6 +38,7 @@ def to_json(obj,node):
             'Block_sender': obj.block_sender
         }
         return json.dumps({
+            'sim_number': node.simulation_number,
             'type': 'Ready',
             'data': data,
             'signature': send_signed(data,node.privatekey),
@@ -60,6 +50,7 @@ def to_json(obj,node):
             'sender': obj.sender,
         }
         return json.dumps({
+            'sim_number': node.simulation_number,
             'type': 'Elect',
             'data': data,
             'signature': send_signed(data,node.privatekey),
@@ -72,6 +63,7 @@ def to_json(obj,node):
             'id_leader': obj.id_leader
         }
         return json.dumps({
+            'sim_number': node.simulation_number,
             'type': 'Leader',
             'data': data,
             'signature': send_signed(data,node.privatekey),
